@@ -1,0 +1,36 @@
+<?php
+
+namespace App\Services\Api\V1\Auth;
+
+use App\Http\Resources\Api\V1\User\UserResource;
+use App\Repositories\V1\Contracts\UserRepositoryInterface;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+
+class AuthService
+{
+    protected $userRepo;
+
+    public function __construct(UserRepositoryInterface $userRepo) {
+        $this->userRepo = $userRepo;
+    }
+    public function registerUser(array $data) {
+        $data['password'] = Hash::make($data['password']);
+        return $this->userRepo->create($data);
+    }
+
+    public function loginUser(array $credentials) {
+        if (Auth::attempt($credentials)) {
+            $user = Auth::user();
+            $token = $user->createToken("User.{$user->id}.AuthToken")->plainTextToken;
+            return ['user' => new UserResource($user), 'token' => $token];
+        }
+        return null;
+    }
+
+    public function logoutUser() {
+        $user = Auth::user();
+        $user->tokens()->delete();
+    }
+
+}

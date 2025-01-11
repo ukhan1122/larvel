@@ -20,7 +20,7 @@ trait ApiResponse
     {
         $response = [
             'status' => 'success',
-            'message' => $message ?? __('responses.success'),
+            'message' => $message ?? __('responses.general.success'),
             'data' => $data,
         ];
 
@@ -70,7 +70,7 @@ trait ApiResponse
     {
         return response()->json([
             'status' => 'success',
-            'message' => $message ?? __('responses.success'),
+            'message' => $message ?? __('responses.general.success'),
             'data' => $paginator->items(),
             'meta' => [
                 'current_page' => $paginator->currentPage(),
@@ -91,7 +91,7 @@ trait ApiResponse
     {
         return response()->json([
             'status' => 'success',
-            'message' => $message ?? __('responses.no_content'),
+            'message' => $message ?? __('responses.general.no_content'),
         ], 204);
     }
 
@@ -102,11 +102,11 @@ trait ApiResponse
      * @param string|null $message
      * @return JsonResponse
      */
-    public function createdResponse(mixed $data, ?string $message = 'Resource created successfully'): JsonResponse
+    public function createdResponse(mixed $data, ?string $message = null): JsonResponse
     {
         return response()->json([
             'status' => 'success',
-            'message' => $message ?? __('responses.created'),
+            'message' => $message ?? __('responses.general.created'),
             'data' => $data,
         ], 201);
     }
@@ -117,11 +117,11 @@ trait ApiResponse
      * @param string|null $message
      * @return JsonResponse
      */
-    public function unauthorizedResponse(?string $message = 'Unauthorized'): JsonResponse
+    public function unauthorizedResponse(?string $message = null): JsonResponse
     {
         return response()->json([
             'status' => 'error',
-            'message' => $message ?? __('responses.unauthorized'),
+            'message' => $message ?? __('responses.general.unauthorized'),
         ], 401);
     }
 
@@ -131,11 +131,11 @@ trait ApiResponse
      * @param string|null $message
      * @return JsonResponse
      */
-    public function forbiddenResponse(?string $message = 'Forbidden'): JsonResponse
+    public function forbiddenResponse(?string $message = null): JsonResponse
     {
         return response()->json([
             'status' => 'error',
-            'message' => $message ?? __('response.forbidden'),
+            'message' => $message ?? __('response.general.forbidden'),
         ], 403);
     }
 
@@ -146,7 +146,7 @@ trait ApiResponse
     {
         return response()->json([
             'status' => 'error',
-            'message' => $message ?? __('responses.validation_failed'),
+            'message' => $message ?? __('responses.general.validation_failed'),
             'errors' => $errors,
         ], 422);
     }
@@ -157,11 +157,11 @@ trait ApiResponse
      * @param string|null $message
      * @return JsonResponse
      */
-    public function notFoundResponse(?string $message = 'Resource not found'): JsonResponse
+    public function notFoundResponse(?string $message = null): JsonResponse
     {
         return response()->json([
             'status' => 'error',
-            'message' => $message ?? __('responses.not_found'),
+            'message' => $message ?? __('responses.general.not_found'),
         ], 404);
     }
 
@@ -172,11 +172,11 @@ trait ApiResponse
      * @param array|null $errors
      * @return JsonResponse
      */
-    public function serverErrorResponse(?string $message = 'Internal server error', array $errors = null): JsonResponse
+    public function serverErrorResponse(?string $message = null, array $errors = null): JsonResponse
     {
         $response = [
             'status' => 'error',
-            'message' => $message ?? __('response.server_error'),
+            'message' => $message ?? __('response.general.server_error'),
         ];
 
         if (!empty($errors)) {
