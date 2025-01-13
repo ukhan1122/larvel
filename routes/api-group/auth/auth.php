@@ -10,10 +10,12 @@ Route::prefix('auth')->group(function () {
 
     Route::post('forgot-password', [AuthenticationController::class, 'forgotPassword'])->name('password.forgot'); // sends the email
 
+    // Note: This route returns a view and needs to be moved to the frontend in the future.
     Route::get('reset-password/{token}', [AuthenticationController::class, 'setNewPassword'])->name('password.reset'); // triggers when clicking the link in the email.
 
     Route::post('set-new-password', [AuthenticationController::class, 'reset'])->name('password.update'); // handles actual password reset
 
+    // Note: This route returns a view and needs to be moved to the frontend in the future.
     Route::get('password-reset-success', [AuthenticationController::class, 'resetSuccess'])->name('password.reset.success'); // shows success page after setting a new password. Should be on frontend
 
 });
