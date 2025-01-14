@@ -103,7 +103,7 @@ class AuthenticationController extends Controller
 
         $user->sendEmailVerificationNotification();
 
-        return $this->successResponse(message: __('response.auth.success.account_email_verification_sent'));
+        return $this->successResponse(message: __('responses.auth.success.account_verification_email_sent'));
     }
 
     public function verifyEmail(Request $request, $id, $hash)
