@@ -19,6 +19,8 @@ Route::prefix('auth')->group(function () {
     Route::get('password-reset-success', [AuthenticationController::class, 'resetSuccess'])->name('password.reset.success'); // shows success page after setting a new password. Should be on frontend
 
     Route::post('email/verification-notification', [AuthenticationController::class, 'sendVerificationEmail']); // send verification email
+
+    // Note: This route needs frontend handling.
     Route::get('email/verify/{id}/{hash}', [AuthenticationController::class, 'verifyEmail'])->name('verification.verify'); // verify the email
 
 });
