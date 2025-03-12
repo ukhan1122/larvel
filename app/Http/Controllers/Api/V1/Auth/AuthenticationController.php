@@ -8,6 +8,7 @@ use App\Http\Requests\Api\V1\Auth\RegisterUserRequest;
 use App\Http\Requests\Api\V1\Auth\ResetPasswordRequest;
 use App\Http\Resources\Api\V1\User\UserResource;
 use App\Models\User;
+use App\Models\UserPreference;
 use App\Notifications\Api\V1\Auth\VerifyEmail;
 use App\Repositories\V1\Contracts\UserRepositoryInterface;
 use App\Services\Api\V1\Auth\AuthService;
@@ -39,6 +40,11 @@ class AuthenticationController extends Controller
         $user->sendEmailVerificationNotification();
 
         $resource = new UserResource($user);
+
+        $preferences = UserPreference::create(['user_id' => $user->id]);
+
+        $user->assignRole('user');
+
         return $this->createdResponse($resource, __('responses.auth.success.register'));
     }
 
