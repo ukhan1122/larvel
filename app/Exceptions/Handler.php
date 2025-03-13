@@ -28,7 +28,7 @@ class Handler extends ExceptionHandler
 
     public function render($request, Throwable $exception): Response|JsonResponse|\Symfony\Component\HttpFoundation\Response|RedirectResponse
     {
-        if ($request->expectsJson()) {
+        if ($request->expectsJson() || request()->wantsJson()) {
             return $this->handleApiException($exception);
         }
 

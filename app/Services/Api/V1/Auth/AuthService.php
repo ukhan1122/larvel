@@ -16,6 +16,7 @@ class AuthService
     }
     public function registerUser(array $data) {
         $data['password'] = Hash::make($data['password']);
+        $data['role'] = 'user';
         return $this->userRepo->create($data);
     }
 
