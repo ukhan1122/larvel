@@ -54,7 +54,7 @@ class ProductService
             }
 
             // Return the product with its associated photos.
-            return $product->load('photos');
+            return $product->load('photos', 'category', 'user', 'brand', 'condition', 'address');
         });
     }
 }

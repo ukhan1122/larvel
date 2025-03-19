@@ -45,8 +45,8 @@ class ProductController extends Controller
 
     public function show() {
         $user = auth()->user();
-        $products = $user->products;
-        return $this->successResponse($products->load('photos'));
+        $products = Product::where('user_id', $user->id)->with(['user', 'category', 'brand', 'condition', 'photos'])->get();
+        return $this->successResponse($products);
     }
 
     /**
@@ -54,7 +54,7 @@ class ProductController extends Controller
      */
     public function publicProducts()
     {
-        $products = Product::with('photos')->get();
+        $products = Product::with(['user', 'category', 'brand', 'condition', 'photos'])->get();
         return $this->successResponse($products);
     }
 }
