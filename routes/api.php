@@ -28,4 +28,8 @@ Route::prefix('v1')->group(function () {
         }
     });
     require base_path('routes/api-group/user/address.php');
+    require base_path('routes/api-group/user/followers.php');
+    require base_path('routes/api-group/user/ratings.php');
+    require base_path('routes/api-group/user/shop.php');
+    require base_path('routes/api-group/user/users.php');
 });

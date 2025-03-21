@@ -68,5 +68,40 @@ class User extends Authenticatable implements MustVerifyEmailContract
     public function products() {
         return $this->hasMany(Product::class);
     }
+
+    // Users that follow this user
+    public function followers() {
+        return $this->belongsToMany(User::class, 'followers', 'user_id', 'follower_id')->withTimestamps();
+    }
+
+    // Users that this user is following
+    public function following() {
+        return $this->belongsToMany(User::class, 'followers', 'follower_id', 'user_id')->withTimestamps();
+    }
+
+    // Products liked by this user
+    public function likedProducts() {
+        return $this->belongsToMany(Product::class, 'product_likes', 'user_id', 'product_id')->withTimestamps();
+    }
+
+    // Products saved by this user
+    public function savedProducts() {
+        return $this->belongsToMany(Product::class, 'product_saves', 'user_id', 'product_id')->withTimestamps();
+    }
+
+    // Ratings given to this user
+    public function ratings() {
+        return $this->hasMany(Rating::class, 'user_id');
+    }
+
+    // Ratings given by this user
+    public function givenRatings() {
+        return $this->hasMany(Rating::class, 'rater_id');
+    }
+
+    // Compute average rating
+    public function averageRating() {
+        return $this->ratings()->avg('rating');
+    }
 }
 

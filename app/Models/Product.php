@@ -63,4 +63,14 @@ class Product extends Model
         return $this->hasMany(Photo::class);
     }
 
+    // Products liked by users (pivot)
+    public function likedByUsers() {
+        return $this->belongsToMany(User::class, 'product_likes', 'product_id', 'user_id')->withTimestamps();
+    }
+
+    // Products saved by users (pivot)
+    public function savedByUsers() {
+        return $this->belongsToMany(User::class, 'product_saves', 'product_id', 'user_id')->withTimestamps();
+    }
+
 }
