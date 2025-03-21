@@ -23,6 +23,9 @@ return new class extends Migration
             $table->string('location');
             $table->string('city');
             $table->string('shipping_type');
+            $table->boolean('active')->default(true);
+            $table->boolean('sold')->default(false);
+            $table->boolean('allow_offers')->default(true);
             $table->unsignedBigInteger('price');
             $table->softDeletes();
             $table->timestamps();

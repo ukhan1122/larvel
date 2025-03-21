@@ -22,9 +22,8 @@ class CreateProductRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'user_id' => 'required|exists:users,id',
             'title'        => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => 'required|string',
             'price'       => 'required',
             'category_id' => 'required|exists:categories,id',
             'brand_id' => 'required|exists:brands,id',
@@ -34,8 +33,24 @@ class CreateProductRequest extends FormRequest
             'city' => 'required|string|max:20',
             'shipping_type' => 'required|string|max:50',
             // Validate images array. Each file must be an image of the allowed types.
-            'images'      => 'nullable|array|max:8',
-            'images.*'    => 'image|mimes:jpeg,png,jpg,gif,svg|max:4028',
+            'images'      => 'required|array|min:2|max:8',
+            'images.*'    => 'image|mimes:jpeg,png,jpg,gif,svg|max:4096',
+            'allow_offers' => 'sometimes|boolean',
+            'sold' => 'sometimes|boolean',
+            'active' => 'sometimes|boolean'
         ];
+    }
+
+    protected function prepareForValidation()
+    {
+        $booleanFields = ['allow_offers', 'sold', 'active'];
+
+        foreach ($booleanFields as $field) {
+            if ($this->has($field)) {
+                $this->merge([
+                    $field => filter_var($this->$field, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE),
+                ]);
+            }
+        }
     }
 }

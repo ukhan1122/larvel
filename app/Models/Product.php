@@ -25,7 +25,16 @@ class Product extends Model
         'city',
         'address_id',
         'shipping_type',
-        'price'
+        'price',
+        'active',
+        'allow_offers',
+        'sold'
+    ];
+
+    protected $casts = [
+        'allow_offers' => 'boolean',
+        'sold' => 'boolean',
+        'active' => 'boolean'
     ];
 
     protected $hidden = ['created_at', 'updated_at', 'deleted_at'];
