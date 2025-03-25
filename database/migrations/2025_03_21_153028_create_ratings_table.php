@@ -18,7 +18,7 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('rater_id');
             $table->unsignedTinyInteger('rating'); // e.g., rating out of 5
-            $table->text('comment')->nullable();
+            $table->text('comment');
 
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('rater_id')->references('id')->on('users')->onDelete('cascade');

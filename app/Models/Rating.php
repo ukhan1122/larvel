@@ -20,4 +20,9 @@ class Rating extends Model
     public function rater() {
         return $this->belongsTo(User::class, 'rater_id');
     }
+
+    public function pictures()
+    {
+        return $this->hasMany(RatingPicture::class);
+    }
 }

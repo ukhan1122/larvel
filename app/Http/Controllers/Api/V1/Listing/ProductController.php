@@ -71,7 +71,7 @@ class ProductController extends Controller
      */
     public function publicProducts()
     {
-        $products = Product::with(['user', 'category', 'brand', 'condition', 'photos'])->get();
+        $products = Product::with(['user', 'category', 'brand', 'condition', 'photos'])->paginate(10);
         return $this->successResponse($products);
     }
 
