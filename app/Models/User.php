@@ -119,5 +119,11 @@ class User extends Authenticatable implements MustVerifyEmailContract
     {
         return $this->hasMany(Message::class, 'sender_id');
     }
+
+    public function sentOffers()
+    {
+        return $this->hasMany(Offer::class, 'offerer_id');
+    }
+
 }
 

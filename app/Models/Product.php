@@ -73,4 +73,10 @@ class Product extends Model
         return $this->belongsToMany(User::class, 'product_saves', 'product_id', 'user_id')->withTimestamps();
     }
 
+    public function offers()
+    {
+        return $this->hasMany(Offer::class);
+    }
+
+
 }
