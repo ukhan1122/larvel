@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
             // The product for which the offer is made.
             $table->unsignedBigInteger('product_id');
+            // User that replied last
+            $table->unsignedBigInteger('last_reply_by')->nullable()->after('message');
             // The user making the offer.
             $table->unsignedBigInteger('offerer_id');
             // The offered amount.
@@ -30,6 +32,7 @@ return new class extends Migration
             // Foreign keys and indexing.
             $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade');
             $table->foreign('offerer_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('last_reply_by')->references('id')->on('users')->onDelete('set null');
             $table->index('status');
             $table->index('product_id');
             $table->index('offerer_id');

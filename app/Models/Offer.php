@@ -17,7 +17,8 @@ class Offer extends Model
         'offer_price',
         'status',
         'counter_price',
-        'message'
+        'message',
+        'last_reply_by'
     ];
 
     /**
@@ -34,5 +35,13 @@ class Offer extends Model
     public function offerer()
     {
         return $this->belongsTo(User::class, 'offerer_id');
+    }
+
+    /**
+     * Get the user who last replied.
+     */
+    public function lastReplyBy()
+    {
+        return $this->belongsTo(User::class, 'last_reply_by');
     }
 }
