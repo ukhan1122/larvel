@@ -16,7 +16,7 @@ return new class extends Migration
             // The product for which the offer is made.
             $table->unsignedBigInteger('product_id');
             // User that replied last
-            $table->unsignedBigInteger('last_reply_by')->nullable()->after('message');
+            $table->unsignedBigInteger('last_reply_by')->nullable();
             // The user making the offer.
             $table->unsignedBigInteger('offerer_id');
             // The offered amount.

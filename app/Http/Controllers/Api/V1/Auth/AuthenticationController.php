@@ -15,6 +15,7 @@ use App\Services\Api\V1\Auth\AuthService;
 use App\Traits\ApiResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -36,8 +37,12 @@ class AuthenticationController extends Controller
 
         $user = $this->authService->registerUser($input);
 
-        // Send the email verification notification
-        $user->sendEmailVerificationNotification();
+        // Attempt to send the email verification notification
+        try {
+            $user->sendEmailVerificationNotification();
+        } catch (\Exception $e) {
+            Log::error('Email verification failed: ' . $e->getMessage());
+        }
 
         $resource = new UserResource($user);
 
