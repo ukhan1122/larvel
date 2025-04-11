@@ -46,7 +46,11 @@ class CartController extends Controller
         $productId = $validated['product_id'];
         $quantity  = $validated['quantity'] ?? 1;
 
-        $cartItem = $this->cartService->addItem($user, $productId, $quantity);
+        try {
+            $cartItem = $this->cartService->addItem($user, $productId, $quantity);
+        } catch (\Exception $e) {
+            return $this->errorResponse("Error adding to cart: {$e->getMessage()}");
+        }
 
         return $this->createdResponse($cartItem, 'Product added to cart successfully');
 
