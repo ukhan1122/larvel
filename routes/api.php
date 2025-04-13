@@ -34,5 +34,6 @@ Route::prefix('v1')->group(function () {
     require base_path('routes/api-group/user/users.php');
     require base_path('routes/api-group/user/reviews.php');
     require base_path('routes/api-group/cart/cart.php');
+    require base_path('routes/api-group/cart/checkout.php');
     require base_path('routes/api-group/conversation/conversations.php');
 });

@@ -16,7 +16,8 @@ class Address extends Model
         'address_line_2',
         'city',
         'state_province_or_region',
-        'zip_or_postal_code'
+        'zip_or_postal_code',
+        'address_type'
     ];
 
     protected $hidden = ['created_at', 'updated_at'];
