@@ -16,6 +16,7 @@ class ProductRepository
     {
         $user = auth()->user();
         $data['user_id'] = $user->id;
+        $data['quantity_left'] = $data['quantity'];
         $product = Product::create($data);
         $product->refresh();
         return $product;

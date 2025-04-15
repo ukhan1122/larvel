@@ -60,6 +60,16 @@ class RatingController extends Controller
         // Reload the rating with its pictures.
         $rating->load('pictures');
 
+
+        $ratedUser = User::findOrFail($userId);
+
+
+        activity()
+            ->performedOn($ratedUser)
+            ->causedBy($request->user())
+            ->withProperties(['rating' => $rating])
+            ->log('user_rated');
+
         return $this->successResponse($rating, 'Rating submitted successfully');
     }
 

@@ -34,7 +34,11 @@ class CartService
     public function addItem($user, $productId, $quantity = 1)
     {
         $cart = Cart::firstOrCreate(['user_id' => $user->id]);
+        $product = Product::findOrFail($productId);
 
+        if ($product->user_id === $user->id) {
+            throw new \Exception("You cannot add your own product to cart");
+        }
         $cartItem = CartItem::where('cart_id', $cart->id)
             ->where('product_id', $productId)
             ->first();
@@ -50,7 +54,7 @@ class CartService
             ]);
         }
 
-        return $cartItem->load('product');
+        return $cartItem->load('product', 'product.user', 'product.brand', 'product.condition', 'product.category', 'product.photos');
     }
 
     /**
@@ -72,7 +76,7 @@ class CartService
         $cartItem->save();
 
         // Ensure the product relation is loaded so the total_price accessor works.
-        $cartItem->load('product');
+        $cartItem->load('product', 'product.user', 'product.brand', 'product.condition', 'product.category', 'product.photos');
         return $cartItem;
     }
 

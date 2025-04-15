@@ -19,6 +19,8 @@ return new class extends Migration
             $table->foreignId('condition_id')->constrained();
             $table->foreignId('address_id')->constrained();
             $table->string('title');
+            $table->integer('quantity')->default(1);
+            $table->integer('quantity_left')->default(1);
             $table->string('description');
             $table->string('location');
             $table->string('city');

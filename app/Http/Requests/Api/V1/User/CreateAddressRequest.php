@@ -27,6 +27,7 @@ class CreateAddressRequest extends FormRequest
             'city' => 'required|string|max:100',
             'state_province_or_region' => 'required|string|max:100',
             'zip_or_postal_code' => 'required|string|max:20',
+            'address_type' => 'required|string'
         ];
     }
 }

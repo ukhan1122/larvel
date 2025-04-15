@@ -24,6 +24,8 @@ class Product extends Model
         'location',
         'city',
         'address_id',
+        'quantity_left',
+        'quantity',
         'shipping_type',
         'price',
         'active',
@@ -76,6 +78,11 @@ class Product extends Model
     public function offers()
     {
         return $this->hasMany(Offer::class);
+    }
+
+    public function orders()
+    {
+        return $this->hasMany(OrderItem::class);
     }
 
 

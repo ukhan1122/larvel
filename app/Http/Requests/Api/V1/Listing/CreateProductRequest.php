@@ -37,7 +37,8 @@ class CreateProductRequest extends FormRequest
             'images.*'    => 'image|mimes:jpeg,png,jpg,gif,svg|max:4096',
             'allow_offers' => 'sometimes|boolean',
             'sold' => 'sometimes|boolean',
-            'active' => 'sometimes|boolean'
+            'active' => 'sometimes|boolean',
+            'quantity' => 'required|numeric'
         ];
     }
 

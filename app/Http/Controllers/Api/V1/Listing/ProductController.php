@@ -38,6 +38,11 @@ class ProductController extends Controller
 
         try {
             $product = $this->productService->createProduct($validatedData, $images);
+            activity()
+                ->performedOn($product) // this associates the log with the product instance
+                ->causedBy(auth()->user()) // user who performed the activity
+                ->withProperties(['product' => $product])
+                ->log('product_posted');
 
             return $this->successResponse($product, __('responses.product.success.create'));
         } catch (\Exception $e) {

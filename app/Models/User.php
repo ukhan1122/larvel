@@ -125,5 +125,11 @@ class User extends Authenticatable implements MustVerifyEmailContract
         return $this->hasMany(Offer::class, 'offerer_id');
     }
 
+    public function bankDetail()
+    {
+        return $this->hasOne(BankDetail::class);
+    }
+
+
 }
 

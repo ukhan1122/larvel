@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('city')->nullable();
             $table->string('state_province_or_region')->nullable();
             $table->string('zip_or_postal_code')->nullable();
+            $table->string('address_type');
             $table->timestamps();
         });
     }
