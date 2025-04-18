@@ -33,6 +33,10 @@ class CheckoutService
                     ->lockForUpdate()
                     ->firstOrFail();
 
+                if ($product->approval_status === 'pending') {
+                    throw new \Exception("Product {$product->id} is not yet approved by the admin");
+                }
+
                 // Ensure that the product actually belongs to the specified seller.
                 if ($product->user_id != $sellerId) {
                     throw new \Exception("Product {$product->id} does not belong to seller {$sellerId}.");

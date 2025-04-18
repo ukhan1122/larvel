@@ -76,7 +76,9 @@ class ProductController extends Controller
      */
     public function publicProducts()
     {
-        $products = Product::with(['user', 'category', 'brand', 'condition', 'photos'])->paginate(10);
+        $products = Product::with(['user', 'category', 'brand', 'condition', 'photos'])
+            ->where('approval_status', '!=', 'pending')
+            ->paginate(10);
         return $this->successResponse($products);
     }
 
@@ -84,7 +86,9 @@ class ProductController extends Controller
 
     public function showSingle($id)
     {
-        $product = Product::with(['user', 'category', 'brand', 'condition', 'photos', 'address'])->find($id);
+        $product = Product::with(['user', 'category', 'brand', 'condition', 'photos', 'address'])
+            ->where('approval_status', '!=', 'pending')
+            ->find($id);
 
         if (!$product) {
             return $this->notFoundResponse();
@@ -95,7 +99,8 @@ class ProductController extends Controller
 
     public function search(Request $request)
     {
-        $query = Product::with(['user', 'category', 'brand', 'condition', 'photos', 'address']);
+        $query = Product::with(['user', 'category', 'brand', 'condition', 'photos', 'address'])
+            ->where('approval_status', '!=', 'pending');
 
         if ($request->filled('category_id')) {
             $query->where('category_id', $request->get('category_id'));

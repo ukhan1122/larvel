@@ -16,7 +16,7 @@ class ActivityController extends Controller
         $perPage = $request->query('per_page', 10);
 
         // Retrieve logs performed by the authenticated user
-        $activities = Activity::causedBy($request->user())
+        $activities = Activity::where('causer_id', auth()->user()->id)
             ->orderBy('created_at', 'desc')
             ->paginate($perPage);
 

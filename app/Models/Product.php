@@ -30,6 +30,7 @@ class Product extends Model
         'price',
         'active',
         'allow_offers',
+        'approval_status',
         'sold'
     ];
 

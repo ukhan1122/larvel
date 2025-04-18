@@ -36,6 +36,10 @@ class CartService
         $cart = Cart::firstOrCreate(['user_id' => $user->id]);
         $product = Product::findOrFail($productId);
 
+        if ($product->approval_status === 'pending') {
+            throw new \Exception("Product is not approved by the admin yet");
+        }
+
         if ($product->user_id === $user->id) {
             throw new \Exception("You cannot add your own product to cart");
         }

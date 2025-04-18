@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('title');
             $table->integer('quantity')->default(1);
             $table->integer('quantity_left')->default(1);
+            $table->string('approval_status')->default('pending');
             $table->string('description');
             $table->string('location');
             $table->string('city');
