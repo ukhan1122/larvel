@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1\Listing;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Listing\UpdateProductRequest;
+use App\Models\Brand;
 use App\Models\Product;
 use App\Services\Api\V1\Listing\ProductService;
 use App\Http\Requests\Api\V1\Listing\CreateProductRequest;
@@ -32,6 +33,22 @@ class ProductController extends Controller
         // The CreateProductRequest automatically validates the input,
         // so we can safely retrieve the validated data.
         $validatedData = $request->validated();
+
+        // ✅ Check if the address_id belongs to the authenticated user
+        $user = auth()->user();
+        $addressId = $validatedData['address_id'] ?? null;
+
+        if (!$user->addresses()->where('id', $addressId)->exists()) {
+            return $this->errorResponse(__('responses.product.failed.invalid_address'));
+        }
+
+
+        $brand = Brand::firstOrCreate(
+            ['name' => $validatedData['brand_name']]
+        );
+        $validatedData['brand_id'] = $brand->id;
+        unset($validatedData['brand_name']);
+
 
         // Get images from the request if they exist.
         $images = $request->hasFile('images') ? $request->file('images') : null;

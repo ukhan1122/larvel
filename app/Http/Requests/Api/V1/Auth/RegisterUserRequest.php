@@ -27,7 +27,8 @@ class RegisterUserRequest extends FormRequest
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'first_name' => ['sometimes', 'string'],
             'last_name' => ['sometimes', 'string'],
-            'location' => ['sometimes', 'string']
+            'location' => ['sometimes', 'string'],
+            'profile_picture' => ['sometimes', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048']
         ];
     }
 }

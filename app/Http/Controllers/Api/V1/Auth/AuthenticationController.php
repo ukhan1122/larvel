@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Auth\Events\Registered;
@@ -34,6 +35,15 @@ class AuthenticationController extends Controller
 
     public function register(RegisterUserRequest $request) {
         $input = $request->validated();
+
+        if ($request->hasFile('profile_picture')) {
+            $file = $request->file('profile_picture');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $relativePath = $file->storeAs('profile_pictures', $filename, 'public');
+
+            // Store the full URL instead of just the path
+            $input['profile_picture'] = asset(Storage::url($relativePath));
+        }
 
         $user = $this->authService->registerUser($input);
 

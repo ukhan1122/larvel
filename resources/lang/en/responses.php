@@ -34,6 +34,7 @@ return [
         ],
         'failed' => [
             'create' => 'Error creating product: :message',
+            'invalid_address' => 'The address you specified does not belong to you'
         ]
     ]
 ];

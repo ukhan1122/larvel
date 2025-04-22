@@ -27,7 +27,7 @@ class FollowerController extends Controller
 
         activity()
             ->performedOn($userToFollow)
-            ->causedBy($request->user())
+            ->causedBy($currentUser)
             ->withProperties(['followed_user' => $userToFollow])
             ->log('user_followed');
 

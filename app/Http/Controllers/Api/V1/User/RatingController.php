@@ -66,7 +66,7 @@ class RatingController extends Controller
 
         activity()
             ->performedOn($ratedUser)
-            ->causedBy($request->user())
+            ->causedBy(auth()->user())
             ->withProperties(['rating' => $rating])
             ->log('user_rated');
 

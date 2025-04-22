@@ -26,7 +26,8 @@ class User extends Authenticatable implements MustVerifyEmailContract
         'first_name',
         'last_name',
         'location',
-        'username'
+        'username',
+        'profile_picture'
     ];
 
     /**
@@ -128,6 +129,10 @@ class User extends Authenticatable implements MustVerifyEmailContract
     public function bankDetail()
     {
         return $this->hasOne(BankDetail::class);
+    }
+
+    public function shop() {
+        return $this->hasOne(Shop::class);
     }
 
 

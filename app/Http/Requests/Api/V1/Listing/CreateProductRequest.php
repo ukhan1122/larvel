@@ -26,7 +26,7 @@ class CreateProductRequest extends FormRequest
             'description' => 'required|string',
             'price'       => 'required',
             'category_id' => 'required|exists:categories,id',
-            'brand_id' => 'required|exists:brands,id',
+            'brand_name' => 'required|string',
             'condition_id' => 'required|exists:conditions,id',
             'address_id' => 'required|exists:addresses,id',
             'location' => 'required|string|max:20',

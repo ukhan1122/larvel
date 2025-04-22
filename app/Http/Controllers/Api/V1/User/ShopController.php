@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\Shop;
 use App\Models\User;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
@@ -45,6 +46,27 @@ class ShopController extends Controller
         $perPage = $request->query('per_page', 10);
         $products = $query->paginate($perPage);
 
-        return $this->successResponse($products);
+        $shop = Shop::where('user_id', $userId)->first();
+
+        return $this->successResponse([
+            'shop' => $shop,
+            'products' => $products
+        ]);
     }
+
+
+    public function updateShopDescription(Request $request) {
+        $request->validate([
+            'description' => ['required', 'string']
+        ]);
+
+        $user = auth()->user();
+        $shop = Shop::updateOrCreate(
+            ['user_id' => $user->id],
+            ['description' => $request->input('description')]
+        );
+
+        return $this->successResponse($shop, 'Shop description updated');
+    }
+
 }
