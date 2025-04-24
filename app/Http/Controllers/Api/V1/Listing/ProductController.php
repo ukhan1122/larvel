@@ -55,6 +55,14 @@ class ProductController extends Controller
 
         try {
             $product = $this->productService->createProduct($validatedData, $images);
+
+            // ✅ Create related Size if size data is present
+            if (isset($validatedData['size_data'])) {
+                $product->size()->create($validatedData['size_data']);
+            }
+
+            $product->load('size'); // load size after creation
+
             activity()
                 ->performedOn($product) // this associates the log with the product instance
                 ->causedBy(auth()->user()) // user who performed the activity
@@ -69,14 +77,14 @@ class ProductController extends Controller
 
     public function userProducts() {
         $user = auth()->user();
-        $products = Product::where('user_id', $user->id)->with(['user', 'category', 'brand', 'condition', 'photos'])->get();
+        $products = Product::where('user_id', $user->id)->with(['user', 'category', 'brand', 'condition', 'photos', 'size'])->get();
         return $this->successResponse($products);
     }
 
     public function showSingleAuth($id)
     {
         $user = auth()->user();
-        $product = Product::with(['user', 'category', 'brand', 'condition', 'photos', 'address'])
+        $product = Product::with(['user', 'category', 'brand', 'condition', 'photos', 'address', 'size'])
             ->where('id', $id)
             ->where('user_id', $user->id)
             ->first();
@@ -93,7 +101,7 @@ class ProductController extends Controller
      */
     public function publicProducts()
     {
-        $products = Product::with(['user', 'category', 'brand', 'condition', 'photos'])
+        $products = Product::with(['user', 'category', 'brand', 'condition', 'photos', 'size'])
             ->where('approval_status', '!=', 'pending')
             ->paginate(10);
         return $this->successResponse($products);
@@ -103,7 +111,7 @@ class ProductController extends Controller
 
     public function showSingle($id)
     {
-        $product = Product::with(['user', 'category', 'brand', 'condition', 'photos', 'address'])
+        $product = Product::with(['user', 'category', 'brand', 'condition', 'photos', 'address', 'size'])
             ->where('approval_status', '!=', 'pending')
             ->find($id);
 
@@ -116,7 +124,7 @@ class ProductController extends Controller
 
     public function search(Request $request)
     {
-        $query = Product::with(['user', 'category', 'brand', 'condition', 'photos', 'address'])
+        $query = Product::with(['user', 'category', 'brand', 'condition', 'photos', 'address', 'size'])
             ->where('approval_status', '!=', 'pending');
 
         if ($request->filled('category_id')) {
@@ -152,7 +160,7 @@ class ProductController extends Controller
     public function searchUserProducts(Request $request)
     {
         $user = auth()->user();
-        $query = Product::with(['user', 'category', 'brand', 'condition', 'photos', 'address'])
+        $query = Product::with(['user', 'category', 'brand', 'condition', 'photos', 'address', 'size'])
             ->where('user_id', $user->id);
 
         // Apply similar filters as in the public search.
@@ -192,7 +200,7 @@ class ProductController extends Controller
     public function update(UpdateProductRequest $request, $id)
     {
         $user = auth()->user();
-        $product = Product::with(['photos', 'category', 'brand', 'condition', 'address', 'user'])
+        $product = Product::with(['photos', 'category', 'brand', 'condition', 'address', 'user', 'size'])
             ->where('id', $id)->where('user_id', $user->id)->first();
 
         if (!$product) {
