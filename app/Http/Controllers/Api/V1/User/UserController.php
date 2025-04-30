@@ -52,4 +52,16 @@ class UserController extends Controller
 
         return $this->successResponse($resource, 'Profile picture updated successfully');
     }
+
+
+    public function wallet() {
+        $user = auth()->user();
+        $wallet = $user->wallet;
+        $transactions = $user->transactions;
+
+        return $this->successResponse([
+            'wallet' => $wallet,
+            'transactions' => $transactions,
+        ]);
+    }
 }

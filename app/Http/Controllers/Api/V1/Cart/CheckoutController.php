@@ -29,7 +29,8 @@ class CheckoutController extends Controller
             $order = $this->checkoutService->processCheckout(
                 $request->user(),
                 $validated['seller_id'],
-                $validated['cart_items']
+                $validated['cart_items'],
+                $validated['delivery_address_id']
             );
 
             return response()->json([

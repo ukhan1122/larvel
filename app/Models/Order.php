@@ -15,7 +15,8 @@ class Order extends Model
         'subtotal',
         'delivery_fee',
         'total_amount',
-        'status'
+        'status',
+        'delivery_address_id'
     ];
 
 
@@ -32,5 +33,10 @@ class Order extends Model
     public function seller()
     {
         return $this->belongsTo(User::class, 'seller_id');
+    }
+
+    public function deliveryAddress()
+    {
+        return $this->belongsTo(Address::class, 'delivery_address_id');
     }
 }

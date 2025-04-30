@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\V1\Listing;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class CreateProductRequest extends FormRequest
 {
@@ -28,7 +29,12 @@ class CreateProductRequest extends FormRequest
             'category_id' => 'required|exists:categories,id',
             'brand_name' => 'required|string',
             'condition_id' => 'required|exists:conditions,id',
-            'address_id' => 'required|exists:addresses,id',
+            'address_id' => [
+                'required',
+                Rule::exists('addresses', 'id')->where(function ($query) {
+                  $query->where('address_type', 'shipping');
+                })
+            ],
             'location' => 'required|string|max:20',
             'city' => 'required|string|max:20',
             'shipping_type' => 'required|string|max:50',

@@ -38,6 +38,13 @@ class CheckoutRequest extends FormRequest
                     ->where('cart_id', $cartId)
             ],
             'cart_items.*.quantity'  => ['required', 'integer', 'min:1'],
+            'delivery_address_id' => [
+                'required',
+                Rule::exists('addresses', 'id')->where(function ($query) {
+                    $query->where('address_type', 'shipping')
+                        ->where('user_id', auth()->id());
+                }),
+            ],
         ];
     }
 
@@ -84,6 +91,7 @@ class CheckoutRequest extends FormRequest
         return [
             'cart_items.*.product_id.exists'  => 'The product must exist in your cart.',
             'cart_items.*.quantity.min'       => 'You must request at least 1 unit.',
+            'delivery_address_id.exists' => 'The selected delivery address is invalid or does not belong to you.',
             // other custom messages...
         ];
     }

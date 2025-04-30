@@ -22,9 +22,9 @@ class CheckoutService
      * @return Order
      * @throws \Exception
      */
-    public function processCheckout(User $buyer, int $sellerId, array $cartItems): Order
+    public function processCheckout(User $buyer, int $sellerId, array $cartItems, int $deliveryAddressId): Order
     {
-        return DB::transaction(function () use ($buyer, $sellerId, $cartItems) {
+        return DB::transaction(function () use ($buyer, $sellerId, $cartItems, $deliveryAddressId) {
             // 1) Compute subtotal and prepare order items
             $subtotal        = 0;
             $orderItemsData  = [];
@@ -74,6 +74,7 @@ class CheckoutService
                 'delivery_fee' => $deliveryFee,
                 'total_amount' => $buyerTotal,
                 'status'       => 'pending',
+                'delivery_address_id' => $deliveryAddressId
             ]);
 
             // 5) Insert order items
@@ -120,7 +121,7 @@ class CheckoutService
 
             /** @var User $seller */
             $seller = User::findOrFail($sellerId);
-            $seller->deposit($sellerPayout);
+            $seller->deposit($sellerPayout, null, false);
 
             // 9) Return the created order with its items
             return $order->load('items');

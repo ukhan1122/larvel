@@ -29,5 +29,10 @@ class Address extends Model
     public function products() {
         return $this->hasMany(Product::class);
     }
+
+    public function deliveryOrders()
+    {
+        return $this->hasMany(Order::class, 'delivery_address_id');
+    }
 }
 
