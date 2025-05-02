@@ -32,7 +32,7 @@ class CreateProductRequest extends FormRequest
             'address_id' => [
                 'required',
                 Rule::exists('addresses', 'id')->where(function ($query) {
-                  $query->where('address_type', 'shipping');
+                  $query->where('address_type', 'pickup');
                 })
             ],
             'location' => 'required|string|max:20',
