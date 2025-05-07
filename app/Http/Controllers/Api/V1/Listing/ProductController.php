@@ -3,14 +3,17 @@
 namespace App\Http\Controllers\Api\V1\Listing;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\V1\Listing\UpdateProductPhotosRequest;
 use App\Http\Requests\Api\V1\Listing\UpdateProductRequest;
 use App\Models\Brand;
 use App\Models\Product;
 use App\Services\Api\V1\Listing\ProductService;
 use App\Http\Requests\Api\V1\Listing\CreateProductRequest;
 use App\Traits\ApiResponse;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
@@ -213,6 +216,54 @@ class ProductController extends Controller
         return $this->successResponse($product, 'Product updated successfully');
     }
 
+    public function updatePhotos(UpdateProductPhotosRequest $request, $id)
+    {
+        $user = auth()->user();
+
+        $product = Product::with('photos')
+            ->where('id', $id)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if (!$product) {
+            return $this->notFoundResponse();
+        }
+
+        $data = $request->validated();
+
+        // Delete photos
+        if (!empty($data['delete_photo_ids'])) {
+            $photosToDelete = $product->photos()->whereIn('id', $data['delete_photo_ids'])->get();
+
+            foreach ($photosToDelete as $photo) {
+                Storage::delete($photo->image_path);
+                $photo->forceDelete(); // permanently remove
+            }
+        }
+
+        // Upload new photos
+        if ($request->hasFile('new_photos')) {
+            foreach ($request->file('new_photos') as $uploadedPhoto) {
+                if ($uploadedPhoto instanceof UploadedFile) {
+                    $filename = time() . '_' . $uploadedPhoto->getClientOriginalName();
+
+                    $relativePath = $uploadedPhoto->storeAs('products', $filename, 'public');
+                    $fullUrl = asset(Storage::url($relativePath));
+
+                    $product->photos()->create([
+                        'image_path' => $fullUrl,
+                        // Add other fields if needed
+                    ]);
+                }
+
+            }
+        }
+
+        // Reload updated photo list
+        $product->load('photos');
+
+        return $this->successResponse($product, 'Product photos updated successfully');
+    }
 
 
 }

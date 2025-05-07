@@ -20,6 +20,8 @@ Route::prefix('auth/products')->middleware(['auth:sanctum', 'role:user'])->group
     // Update an existing product
     Route::put('{id}', [ProductController::class, 'update']);
 
+    Route::post('{id}/photos', [ProductController::class, 'updatePhotos']);
+
     // Delete a product
     Route::delete('{id}', [ProductController::class, 'destroy']);
 

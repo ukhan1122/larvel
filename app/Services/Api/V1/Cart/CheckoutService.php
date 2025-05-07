@@ -90,6 +90,15 @@ class CheckoutService
                 'delivery_address_id' => $deliveryAddressId
             ]);
 
+            $buyerFullName = $buyer->first_name . ' ' . $buyer->last_name;
+            if ($order) {
+                activity()
+                    ->performedOn($order)
+                    ->causedBy($buyer)
+                    ->withProperties(['order' => $order, 'message' => "Order successfully placed by {$buyerFullName}"])
+                    ->log('order_placed');
+            }
+
             // 5) Insert order items
             foreach ($orderItemsData as &$row) {
                 $row['order_id'] = $order->id;
@@ -129,12 +138,11 @@ class CheckoutService
             } else {
                 $sellerBase = $subtotal;
             }
-            $platformFee  = round($sellerBase * 0.10, 2);
-            $sellerPayout = round($sellerBase - $platformFee, 2);
+            $sellerPayout = round($sellerBase - $platformFeeAmount, 2);
 
             /** @var User $seller */
             $seller = User::findOrFail($sellerId);
-            $seller->deposit($sellerPayout, null, false);
+            $seller->deposit($sellerPayout, ['order' => $order], false);
 
             // 9) Return the created order with its items
             return $order->load('items');

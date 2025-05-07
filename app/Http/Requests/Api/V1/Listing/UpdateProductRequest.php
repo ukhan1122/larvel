@@ -27,7 +27,9 @@ class UpdateProductRequest extends FormRequest
             'price'         => 'sometimes|required|numeric',
             'allow_offers' => 'sometimes|boolean',
             'sold' => 'sometimes|boolean',
-            'active' => 'sometimes|boolean'
+            'active' => 'sometimes|boolean',
+            'quantity' => 'sometimes|integer',
+            'quantity_left' => 'sometimes|integer'
 
         ];
     }
