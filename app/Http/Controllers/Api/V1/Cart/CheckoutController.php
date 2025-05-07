@@ -54,7 +54,7 @@ class CheckoutController extends Controller
     public function getOrders(Request $request)
     {
         $orders = Order::where('buyer_id', $request->user()->id)
-            ->with('items.product', 'seller')
+            ->with(['items.product', 'items.product.photos', 'seller'])
             ->orderBy('created_at', 'desc')
             ->get();
 

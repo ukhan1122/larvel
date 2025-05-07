@@ -57,11 +57,10 @@ class UserController extends Controller
     public function wallet() {
         $user = auth()->user();
         $wallet = $user->wallet;
-        $transactions = $user->transactions;
+        $transactions = $wallet->transactions;
 
         return $this->successResponse([
             'wallet' => $wallet,
-            'transactions' => $transactions,
         ]);
     }
 }

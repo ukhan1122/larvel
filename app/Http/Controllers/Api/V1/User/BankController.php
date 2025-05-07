@@ -14,9 +14,9 @@ class BankController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'bank_name' => 'required|string|max:255',
-            'account_title' => 'required|string|max:255',
-            'account_number' => 'required|string|max:50',
+            'bank_name' => 'nullable|string|max:255',
+            'account_title' => 'nullable|string|max:255',
+            'account_number' => 'nullable|string|max:50',
             'iban' => 'nullable|string|max:50',
             'branch_code' => 'nullable|string|max:50',
         ]);
