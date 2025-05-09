@@ -20,7 +20,9 @@ class Order extends Model
         'platform_fee',
         'expected_delivery_date',
         'actual_delivery_date',
-        'tracking_no'
+        'tracking_no',
+        'total_seller_payout',
+        'market_threshold_applied'
     ];
 
     protected $casts = [

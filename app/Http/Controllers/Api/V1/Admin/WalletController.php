@@ -90,9 +90,11 @@ class WalletController extends Controller
     {
         $request->validate([
             'amount' => 'required|numeric|min:0.01',
+            'meta' => 'sometimes|array',
+            'confirm' => 'sometimes|bool'
         ]);
 
-        $txn = $user->deposit($request->amount);
+        $txn = $user->deposit($request->amount, $request->meta, $request->confirm);
 
         return response()->json(['transaction' => $txn]);
     }

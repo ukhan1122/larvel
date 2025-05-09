@@ -25,11 +25,6 @@ class FollowerController extends Controller
 
         $currentUser->following()->syncWithoutDetaching([$userToFollow->id]);
 
-        activity()
-            ->performedOn($userToFollow)
-            ->causedBy($currentUser)
-            ->withProperties(['followed_user' => $userToFollow])
-            ->log('user_followed');
 
         return $this->successResponse(null, 'User followed successfully');
     }

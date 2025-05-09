@@ -15,32 +15,29 @@ use Illuminate\Support\Str;
 
 class CheckoutService
 {
-    /**
-     * Process a checkout for items in the cart belonging to a specific seller.
-     *
-     * @param  User   $buyer      The authenticated buyer.
-     * @param  int    $sellerId   The seller whose products are being checked out.
-     * @param  array  $cartItems  Each item: ['product_id' => int, 'quantity' => int]
-     * @return Order
-     * @throws \Exception
-     */
     public function processCheckout(User $buyer, int $sellerId, array $cartItems, int $deliveryAddressId): Order
     {
         return DB::transaction(function () use ($buyer, $sellerId, $cartItems, $deliveryAddressId) {
-            // 1) Compute subtotal and prepare order items
-            $subtotal        = 0;
-            $orderItemsData  = [];
+            // 1) Lock all products in one go
+            $productIds = collect($cartItems)->pluck('product_id')->all();
+            $products = Product::whereIn('id', $productIds)
+                ->where('user_id', $sellerId)
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id');
 
+            if ($products->count() !== count($productIds)) {
+                throw new \Exception("One or more products were not found for this seller.");
+            }
+
+            $now       = now();
+            $subtotal  = 0;
+            $itemsData = [];
+
+            // 2) Build order-items payload and compute subtotal
             foreach ($cartItems as $item) {
-                /** @var Product $product */
-                $product = Product::where('id', $item['product_id'])
-                    ->lockForUpdate()
-                    ->firstOrFail();
+                $product = $products[$item['product_id']];
 
-                // Double-check seller ownership and stock (should already be validated)
-                if ($product->user_id !== $sellerId) {
-                    throw new \Exception("Product ID {$product->id} does not belong to this seller.");
-                }
                 if ($item['quantity'] > $product->quantity_left) {
                     throw new \Exception("Insufficient stock for product ID {$product->id}.");
                 }
@@ -48,104 +45,101 @@ class CheckoutService
                 $lineTotal   = $product->price * $item['quantity'];
                 $subtotal   += $lineTotal;
 
-                $orderItemsData[] = [
+                $itemsData[] = [
                     'product_id' => $product->id,
                     'quantity'   => $item['quantity'],
                     'price'      => $product->price,
                     'total'      => $lineTotal,
-                    'created_at' => now(),
-                    'updated_at' => now(),
+                    'created_at' => $now,
+                    'updated_at' => $now,
                 ];
             }
 
-            // 2) Load dynamic delivery fee
-            $deliveryFee = Fees::where('fee_type', 'delivery')
-                ->value('fee_amount');
+            // 3) Grab both fees in one query
+            $fees = Fees::whereIn('fee_type', ['delivery','platform', 'market_threshold'])
+                ->pluck('fee_amount','fee_type');
 
-            $platformFee = Fees::where('fee_type', 'platform')
-                ->value('fee_amount');
+            $deliveryFee     = $fees['delivery'] ?? 0;
+            $platformFeeRate = $fees['platform']  ?? 0;
 
-            // 3) Compute buyer‐facing total
-            $threshold  = 3000;
-            $buyerTotal = ($subtotal >= $threshold)
-                ? $subtotal
-                : $subtotal + $deliveryFee;
+            // 4) Totals logic
+            $threshold          = $fees['market_threshold'] ?? 0;
+            $exceedsThreshold   = $subtotal >= $threshold;
+            $buyerTotal         = $exceedsThreshold ? $subtotal : $subtotal + $deliveryFee;
+            $platformFeeBase    = $subtotal - ($exceedsThreshold ? $deliveryFee : 0);
+            $platformFeeAmount  = round($platformFeeBase * $platformFeeRate, 2);
 
-            $platformFeeAmount = ($subtotal >= $threshold)
-                ? round(($subtotal - $deliveryFee) * $platformFee, 2)
-                : round($subtotal * $platformFee, 2);
+            // 10) Compute seller payout & deposit
+            $sellerBase   = $exceedsThreshold ? $subtotal - $deliveryFee : $subtotal;
+            $sellerPayout = round($sellerBase - $platformFeeAmount, 2);
 
-            // 4) Create the Order
+            // 5) Create the Order
             $order = Order::create([
-                'buyer_id'     => $buyer->id,
-                'seller_id'    => $sellerId,
-                'subtotal'     => $subtotal,
-                'delivery_fee' => $deliveryFee,
-                'platform_fee' => $platformFeeAmount,
-                'expected_delivery_date' => Carbon::now()->addDays(5),
-                'tracking_no' => 'CLSY-' . strtoupper(Str::random(10)),
-                'actual_delivery_date' => null,
-                'total_amount' => $buyerTotal,
-                'status'       => 'pending',
-                'delivery_address_id' => $deliveryAddressId
+                'buyer_id'                 => $buyer->id,
+                'seller_id'                => $sellerId,
+                'subtotal'                 => $subtotal,
+                'delivery_fee'             => $deliveryFee,
+                'platform_fee'             => $platformFeeAmount,
+                'total_amount'             => $buyerTotal,
+                'expected_delivery_date'   => Carbon::now()->addDays(5),
+                'tracking_no'              => 'CLSY-' . strtoupper(Str::random(10)),
+                'actual_delivery_date'     => null,
+                'status'                   => 'pending',
+                'delivery_address_id'      => $deliveryAddressId,
+                'total_seller_payout' => $sellerPayout,
+                'market_threshold_applied' => $threshold
             ]);
 
-            $buyerFullName = $buyer->first_name . ' ' . $buyer->last_name;
-            if ($order) {
-                activity()
-                    ->performedOn($order)
-                    ->causedBy($buyer)
-                    ->withProperties(['order' => $order, 'message' => "Order successfully placed by {$buyerFullName}"])
-                    ->log('order_placed');
-            }
 
-            // 5) Insert order items
-            foreach ($orderItemsData as &$row) {
-                $row['order_id'] = $order->id;
-            }
-            OrderItem::insert($orderItemsData);
 
-            // 6) Update product stock & sold flag
+            // 6) Log activity
+            activity()
+                ->performedOn($order)
+                ->causedBy($buyer)
+                ->withProperties([
+                    'data'   => $order,
+                    'message' => "Order successfully placed by {$buyer->first_name} {$buyer->last_name}",
+                    'title' => 'Order placed'
+                ])
+                ->log('order_placed');
+
+            // 7) Insert order items via relationship
+            $order->items()->createMany($itemsData);
+
+            // 8) Update stock & sold flag on the same locked models
             foreach ($cartItems as $item) {
-                $product   = Product::findOrFail($item['product_id']);
-                $newLeft   = $product->quantity_left - $item['quantity'];
-                $product->update([
+                $p       = $products[$item['product_id']];
+                $newLeft = $p->quantity_left - $item['quantity'];
+
+                $p->update([
                     'quantity_left' => $newLeft,
-                    'sold'          => ($newLeft === 0),
+                    'sold'          => $newLeft === 0,
                 ]);
             }
 
-            // 7) Adjust buyer’s cart: decrement or remove
-            $cart          = Cart::firstOrCreate(['user_id' => $buyer->id]);
-            $cartItemsById = $cart->items()->whereIn(
-                'product_id', collect($cartItems)->pluck('product_id')
-            )->get()->keyBy('product_id');
+            // 9) Adjust buyer’s cart in one go
+            $cart = Cart::firstOrCreate(['user_id' => $buyer->id]);
+            $cartItemsById = $cart
+                ->items()
+                ->whereIn('product_id', $productIds)
+                ->get()
+                ->keyBy('product_id');
 
             foreach ($cartItems as $item) {
-                $cartItem = $cartItemsById[$item['product_id']];
-                $remaining = $cartItem->quantity - $item['quantity'];
+                $ci        = $cartItemsById[$item['product_id']];
+                $remaining = $ci->quantity - $item['quantity'];
 
                 if ($remaining > 0) {
-                    $cartItem->update(['quantity' => $remaining]);
+                    $ci->update(['quantity' => $remaining]);
                 } else {
-                    $cartItem->delete();
+                    $ci->delete();
                 }
             }
 
-            // 8) Compute seller payout & deposit wallet points
-            if ($subtotal >= $threshold) {
-                $sellerBase = $subtotal - $deliveryFee;
-            } else {
-                $sellerBase = $subtotal;
-            }
-            $sellerPayout = round($sellerBase - $platformFeeAmount, 2);
 
-            /** @var User $seller */
-            $seller = User::findOrFail($sellerId);
-            $seller->deposit($sellerPayout, ['order' => $order], false);
-
-            // 9) Return the created order with its items
+            // 11) Return order with its items eager-loaded
             return $order->load('items');
         });
     }
+
 }

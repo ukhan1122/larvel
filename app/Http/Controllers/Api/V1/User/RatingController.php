@@ -64,11 +64,6 @@ class RatingController extends Controller
         $ratedUser = User::findOrFail($userId);
 
 
-        activity()
-            ->performedOn($ratedUser)
-            ->causedBy(auth()->user())
-            ->withProperties(['rating' => $rating])
-            ->log('user_rated');
 
         return $this->successResponse($rating, 'Rating submitted successfully');
     }

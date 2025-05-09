@@ -65,7 +65,7 @@ class ProductController extends Controller
             activity()
                 ->performedOn($product)
                 ->causedBy($user)
-                ->withProperties(['product' => $product])
+                ->withProperties(['data' => $product, 'message' => 'New product posted by a user. Tap to see.', 'title' => 'Product posted'])
                 ->log('product_posted');
 
             return $this->successResponse($product, __('responses.product.success.create'));

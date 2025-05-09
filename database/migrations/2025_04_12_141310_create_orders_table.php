@@ -34,6 +34,8 @@ return new class extends Migration
             // Overall total = subtotal + delivery_fee
             $table->decimal('total_amount', 10, 2);
             // Order status e.g. 'pending', 'completed'
+            $table->decimal('total_seller_payout', 10, 2);
+            $table->decimal('market_threshold_applied', 10, 2);
             $table->string('status')->default('pending');
             $table->timestamps();
 
