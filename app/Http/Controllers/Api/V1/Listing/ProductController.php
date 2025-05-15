@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1\Listing;
 
+use App\Helpers\ActivityLogHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Listing\UpdateProductPhotosRequest;
 use App\Http\Requests\Api\V1\Listing\UpdateProductRequest;
@@ -62,11 +63,7 @@ class ProductController extends Controller
             $product->load('size');
 
             // Log product activity
-            activity()
-                ->performedOn($product)
-                ->causedBy($user)
-                ->withProperties(['data' => $product, 'message' => 'New product posted by a user. Tap to see.', 'title' => 'Product posted'])
-                ->log('product_posted');
+            ActivityLogHelper::logProductPosted($product);
 
             return $this->successResponse($product, __('responses.product.success.create'));
 
