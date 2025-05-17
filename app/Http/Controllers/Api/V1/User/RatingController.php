@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1\User;
 
+use App\Helpers\ActivityLogHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Rating;
 use App\Models\User;
@@ -62,6 +63,8 @@ class RatingController extends Controller
 
 
         $ratedUser = User::findOrFail($userId);
+
+        ActivityLogHelper::logUserRating(request()->user(), $ratedUser, $rating);
 
 
 

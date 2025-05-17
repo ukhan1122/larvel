@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1\User;
 
+use App\Helpers\ActivityLogHelper;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Traits\ApiResponse;
@@ -25,6 +26,7 @@ class FollowerController extends Controller
 
         $currentUser->following()->syncWithoutDetaching([$userToFollow->id]);
 
+        ActivityLogHelper::logUserFollow($request->user(), $userToFollow);
 
         return $this->successResponse(null, 'User followed successfully');
     }

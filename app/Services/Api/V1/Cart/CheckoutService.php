@@ -2,6 +2,7 @@
 
 namespace App\Services\Api\V1\Cart;
 
+use App\Helpers\ActivityLogHelper;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Product;
@@ -93,15 +94,7 @@ class CheckoutService
 
 
             // 6) Log activity
-            activity()
-                ->performedOn($order)
-                ->causedBy($buyer)
-                ->withProperties([
-                    'data'   => $order,
-                    'message' => "Order successfully placed by {$buyer->first_name} {$buyer->last_name}",
-                    'title' => 'Order placed'
-                ])
-                ->log('order_placed');
+            ActivityLogHelper::logOrderPlaced($order);
 
             // 7) Insert order items via relationship
             $order->items()->createMany($itemsData);
