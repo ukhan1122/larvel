@@ -141,5 +141,10 @@ class User extends Authenticatable implements MustVerifyEmailContract, Wallet, C
     }
 
 
+    public function bankTransactions() {
+        return $this->hasMany(BankTransaction::class);
+    }
+
+
 }
 
