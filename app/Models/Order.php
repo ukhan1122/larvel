@@ -54,4 +54,8 @@ class Order extends Model
     {
         return $this->belongsTo(Address::class, 'delivery_address_id');
     }
+
+    public function bank_transaction() {
+        return $this->hasOne(BankTransaction::class);
+    }
 }
