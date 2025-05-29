@@ -42,4 +42,11 @@ class BankController extends Controller
 
         return $this->successResponse($bankDetail);
     }
+
+    public function getTransactions() {
+        $user = auth()->user();
+        $transactions = $user->bankTransactions;
+
+        return $this->successResponse($transactions);
+    }
 }

@@ -49,14 +49,25 @@ class CheckoutController extends Controller
     }
 
     /**
-     * Retrieve orders for the authenticated buyer.
+     * Retrieve orders for the authenticated user.
+     * either sold or purchased
      */
     public function getOrders(Request $request)
     {
-        $orders = Order::where('buyer_id', $request->user()->id)
-            ->with(['items.product', 'items.product.photos', 'seller'])
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $type = $request->query('type', 'sold'); // default is 'sold'
+        $userId = $request->user()->id;
+
+        if ($type === 'purchased') {
+            $orders = Order::where('buyer_id', $userId)
+                ->with(['items.product', 'items.product.photos', 'seller'])
+                ->orderBy('created_at', 'desc')
+                ->get();
+        } else { // default or 'sold'
+            $orders = Order::where('seller_id', $userId)
+                ->with(['items.product', 'items.product.photos', 'buyer'])
+                ->orderBy('created_at', 'desc')
+                ->get();
+        }
 
         return response()->json([
             'status'  => 'success',

@@ -3,6 +3,8 @@
 namespace App\Services\Api\V1\Cart;
 
 use App\Helpers\ActivityLogHelper;
+use App\Mail\OrderSummaryToAdmin;
+use App\Mail\OrderSummaryToSeller;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Product;
@@ -12,6 +14,8 @@ use App\Models\Fees;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class CheckoutService
@@ -91,13 +95,22 @@ class CheckoutService
                 'market_threshold_applied' => $threshold
             ]);
 
+            $order->load('items', 'items.product', 'buyer', 'seller');
 
 
-            // 6) Log activity
+            // 6) Insert order items via relationship
+            $order->items()->createMany($itemsData);
+
+
+            // 7) Log activity
             ActivityLogHelper::logOrderPlaced($order);
 
-            // 7) Insert order items via relationship
-            $order->items()->createMany($itemsData);
+            try {
+                Mail::to($order->seller->email)->send(new OrderSummaryToSeller($order));
+                Mail::to(config('app.admin_email'))->send(new OrderSummaryToAdmin($order));
+            } catch (\Exception $e) {
+                Log::error('Failed to send order summary email: ' . $e->getMessage());
+            }
 
             // 8) Update stock & sold flag on the same locked models
             foreach ($cartItems as $item) {
