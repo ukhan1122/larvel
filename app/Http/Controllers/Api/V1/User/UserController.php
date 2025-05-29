@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1\User;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\User\UserResource;
+use App\Models\Order;
 use App\Models\User;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
@@ -61,6 +62,23 @@ class UserController extends Controller
 
         return $this->successResponse([
             'wallet' => $wallet,
+        ]);
+    }
+
+    public function stats(Request $request)
+    {
+        $userId = $request->user()->id;
+
+        $completedOrders = Order::where('seller_id', $userId)
+            ->where('status', 'completed')
+            ->get();
+
+        $totalRevenue = $completedOrders->sum('subtotal');
+        $totalProfit  = $completedOrders->sum('total_seller_payout');
+
+        return $this->successResponse([
+            'total_revenue' => $totalRevenue,
+            'total_profit'  => $totalProfit,
         ]);
     }
 }
