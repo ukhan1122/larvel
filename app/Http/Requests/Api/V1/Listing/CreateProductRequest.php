@@ -45,14 +45,14 @@ class CreateProductRequest extends FormRequest
             'sold' => 'sometimes|boolean',
             'active' => 'sometimes|boolean',
             'quantity' => 'required|numeric',
-            'size_data' => 'required|array',
-            'size_data.chest' => 'required_without_all:size_data.waist,size_data.hips,size_data.inseam,size_data.sleeve,size_data.shoulder,size_data.standard_size|nullable|numeric',
-            'size_data.waist' => 'required_without_all:size_data.chest,size_data.hips,size_data.inseam,size_data.sleeve,size_data.shoulder,size_data.standard_size|nullable|numeric',
-            'size_data.hips' => 'required_without_all:size_data.chest,size_data.waist,size_data.inseam,size_data.sleeve,size_data.shoulder,size_data.standard_size|nullable|numeric',
-            'size_data.inseam' => 'required_without_all:size_data.chest,size_data.waist,size_data.hips,size_data.sleeve,size_data.shoulder,size_data.standard_size|nullable|numeric',
-            'size_data.sleeve' => 'required_without_all:size_data.chest,size_data.waist,size_data.hips,size_data.inseam,size_data.shoulder,size_data.standard_size|nullable|numeric',
-            'size_data.shoulder' => 'required_without_all:size_data.chest,size_data.waist,size_data.hips,size_data.inseam,size_data.sleeve,size_data.standard_size|nullable|numeric',
-            'size_data.standard_size' => 'required_without_all:size_data.chest,size_data.waist,size_data.hips,size_data.inseam,size_data.sleeve,size_data.shoulder|in:small,medium,large,extra_large',
+            'size_data' => 'sometimes|array',
+            'size_data.chest' => 'sometimes|numeric',
+            'size_data.waist' => 'sometimes|numeric',
+            'size_data.hips' => 'sometimes|numeric',
+            'size_data.inseam' => 'sometimes|numeric',
+            'size_data.sleeve' => 'sometimes|numeric',
+            'size_data.shoulder' => 'sometimes|numeric',
+            'size_data.standard_size' => 'sometimes|in:small,medium,large,extra_large',
         ];
     }
 

@@ -85,13 +85,13 @@
 <div class="email-container">
     <!-- Header Section -->
     <div class="header">
-        <img src="https://via.placeholder.com/150x50?text=Depop" alt="Depop Logo">
+        <img src="https://via.placeholder.com/150x50?text=Clossyyyy" alt="Clossyyyy Logo">
         <h1>Verify Your Email</h1>
     </div>
 
     <!-- Content Section -->
     <div class="content">
-        <h2>Welcome to Depop!</h2>
+        <h2>Welcome to Clossyyyy!</h2>
         <p>Thanks for signing up! To get started, please verify your email address by clicking the button below.</p>
 
         <!-- Verify Button -->
@@ -99,14 +99,14 @@
             <a href="{{ $url }}">Verify Email</a>
         </div>
 
-        <p>If you didn’t sign up for a Depop account, you can safely ignore this email.</p>
+        <p>If you didn’t sign up for a Clossyyyy account, you can safely ignore this email.</p>
     </div>
 
     <!-- Footer Section -->
     <div class="footer">
         <p>
             Need help? <a href="#">Contact Support</a><br>
-            &copy; 2025 Depop. All rights reserved.
+            &copy; 2025 Clossyyyy. All rights reserved.
         </p>
     </div>
 </div>

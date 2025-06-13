@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Depop Password Reset</title>
+    <title>Closyyyy Password Reset</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -68,22 +68,22 @@
 <div class="email-container">
     <!-- Header -->
     <div class="email-header">
-        Depop
+        Clossyyyy
     </div>
 
     <!-- Body -->
     <div class="email-body">
         <h2>Reset Your Password</h2>
         <p>Hi there,</p>
-        <p>You recently requested to reset your Depop password. Click the button below to reset it:</p>
+        <p>You recently requested to reset your Clossyyyy password. Click the button below to reset it:</p>
         <a href="{{ $url }}" class="email-button">Reset Password</a>
         <p>If you did not request a password reset, please ignore this email. This link will expire in 60 minutes.</p>
-        <p>Thank you for being part of the Depop community!</p>
+        <p>Thank you for being part of the Clossyyyy community!</p>
     </div>
 
     <!-- Footer -->
     <div class="email-footer">
-        <p>&copy; {{ date('Y') }} Depop. All rights reserved.</p>
+        <p>&copy; {{ date('Y') }} Clossyyyy. All rights reserved.</p>
         <p><a href="#">Terms of Service</a> | <a href="#">Privacy Policy</a></p>
     </div>
 </div>
