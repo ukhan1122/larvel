@@ -60,6 +60,8 @@ class GoogleAuthController extends Controller
         // 2d. Issue Sanctum token
         $token = $user->createToken('spa')->plainTextToken;
 
+        $user->assignRole('user');
+
         return response()->json([
             'user'  => $user,
             'token' => $token,
