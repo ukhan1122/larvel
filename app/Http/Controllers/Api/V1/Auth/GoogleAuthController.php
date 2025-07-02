@@ -51,9 +51,12 @@ class GoogleAuthController extends Controller
 
         // 2c. Upsert into users table
         $user = User::updateOrCreate(
-            ['email'     => $googleUser->getEmail()],
+            ['email' => $googleUser->getEmail()],
             [
-                'google_id'=> $googleUser->getId(),
+                'google_id'       => $googleUser->getId(),
+                'first_name'      => $googleUser->user['given_name'] ?? '',
+                'last_name'       => $googleUser->user['family_name'] ?? '',
+                'profile_picture' => $googleUser->avatar,
             ]
         );
 

@@ -91,8 +91,8 @@ class CheckoutRequest extends FormRequest
         return [
             'cart_items.*.product_id.exists'  => 'The product must exist in your cart.',
             'cart_items.*.quantity.min'       => 'You must request at least 1 unit.',
-            'delivery_address_id.exists' => 'The selected delivery address is invalid or does not belong to you.',
-            // other custom messages...
+            'delivery_address_id.required'    => 'Please add an address to confirm order.',
+            'delivery_address_id.exists'      => 'The selected delivery address is invalid or does not belong to you.',
         ];
     }
 }
