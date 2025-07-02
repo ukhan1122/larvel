@@ -68,15 +68,9 @@ class CheckoutService
             $platformFeeRate = $fees['platform']  ?? 0;
 
             // 4) Totals logic
-            $threshold          = $fees['market_threshold'] ?? 0;
-            $exceedsThreshold   = $subtotal >= $threshold;
-            $buyerTotal         = $exceedsThreshold ? $subtotal : $subtotal + $deliveryFee;
-            $platformFeeBase    = $subtotal - ($exceedsThreshold ? $deliveryFee : 0);
-            $platformFeeAmount  = round($platformFeeBase * $platformFeeRate, 2);
-
-            // 10) Compute seller payout & deposit
-            $sellerBase   = $exceedsThreshold ? $subtotal - $deliveryFee : $subtotal;
-            $sellerPayout = round($sellerBase - $platformFeeAmount, 2);
+            $buyerTotal        = $subtotal + $deliveryFee;
+            $platformFeeAmount = round($subtotal * $platformFeeRate, 2);
+            $sellerPayout      = round($subtotal - $platformFeeAmount, 2);
 
             // 5) Create the Order
             $order = Order::create([
@@ -92,7 +86,7 @@ class CheckoutService
                 'status'                   => 'pending',
                 'delivery_address_id'      => $deliveryAddressId,
                 'total_seller_payout' => $sellerPayout,
-                'market_threshold_applied' => $threshold
+                'market_threshold_applied' => 0
             ]);
 
             $order->load('items', 'items.product', 'buyer', 'seller');
