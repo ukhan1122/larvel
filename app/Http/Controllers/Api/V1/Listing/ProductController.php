@@ -106,8 +106,7 @@ class ProductController extends Controller
 
         $products = Product::with(['user', 'category', 'brand', 'condition', 'photos', 'size'])
             ->where('approval_status', 'approved')
-            ->paginate(10);
-        logger($products);
+            ->get();
         return $this->successResponse($products);
     }
 
