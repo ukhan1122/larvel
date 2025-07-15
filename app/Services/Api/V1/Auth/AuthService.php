@@ -26,12 +26,22 @@ class AuthService
         return $this->userRepo->create($data);
     }
 
-    public function loginUser(array $credentials) {
-        if (Auth::attempt($credentials)) {
+    public function loginUser(array $credentials)
+    {
+        $loginField = $credentials['login']; // Single input: phone, email, or username
+        $password = $credentials['password'];
+
+        // Determine the field type
+        $field = filter_var($loginField, FILTER_VALIDATE_EMAIL) ? 'email' :
+            (preg_match('/^\d{10,15}$/', $loginField) ? 'phone' : 'username');
+
+        // Attempt login
+        if (Auth::attempt([$field => $loginField, 'password' => $password])) {
             $user = Auth::user();
             $token = $user->createToken("User.{$user->id}.AuthToken")->plainTextToken;
             return ['user' => new UserResource($user), 'token' => $token];
         }
+
         return null;
     }
 

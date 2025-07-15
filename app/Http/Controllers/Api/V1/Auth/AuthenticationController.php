@@ -38,6 +38,7 @@ class AuthenticationController extends Controller
 
     public function register(RegisterUserRequest $request) {
         $input = $request->validated();
+        $phone = $request->get('phone');
 
         if ($request->hasFile('profile_picture')) {
             $file = $request->file('profile_picture');
@@ -47,21 +48,19 @@ class AuthenticationController extends Controller
             // Store the full URL instead of just the path
             $input['profile_picture'] = asset(Storage::url($relativePath));
         }
+        $user = User::where('phone', $phone)->firstOrFail();
+        $user->update($input);
 
-        $user = $this->authService->registerUser($input);
 
 
         $resource = new UserResource($user);
 
-        $preferences = UserPreference::create(['user_id' => $user->id]);
-
-        $user->assignRole('user');
 
         return $this->createdResponse($resource, __('responses.auth.success.register'));
     }
 
     public function login(LoginRequest $request) {
-        $input = $request->validated();
+        $input = $request->all();
 
         $attempt = $this->authService->loginUser($input);
 
@@ -151,6 +150,7 @@ class AuthenticationController extends Controller
 
     public function verifyPhone(Request $request)
     {
+        logger($request->all());
         $request->validate([
             'phone' => 'required|string'
         ]);
@@ -221,6 +221,8 @@ class AuthenticationController extends Controller
 
     public function verifyOtp(Request $request)
     {
+        logger($request->all());
+
         logger('🔐 verifyOtp: Incoming request', $request->all());
 
         $request->validate([
@@ -274,7 +276,7 @@ class AuthenticationController extends Controller
         logger('🗑️ OTP deleted');
 
         // ✅ Log the user in
-        Auth::login($user);
+//        Auth::login($user);
         logger('🔓 Auth::login() called', ['logged_in_user_id' => Auth::id()]);
 
         // ✅ Create token
@@ -285,12 +287,10 @@ class AuthenticationController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Phone verified & logged in successfully',
-            'token'   => $token,
-            'redirect_url' => 'http://localhost:5173/seller/edit',
+//            'token'   => $token,
+//            'redirect_url' => 'http://localhost:5173/seller/edit',
             'user' => new UserResource($user),
         ], 200);
     }
-
-
 
 }
