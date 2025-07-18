@@ -11,6 +11,10 @@ class Order extends Model
 
     protected $fillable = [
         'buyer_id',
+        'guest_name',
+        'guest_phone',
+        'guest_email',
+        'is_guest_order',
         'seller_id',
         'subtotal',
         'delivery_fee',

@@ -3,8 +3,6 @@
 namespace App\Http\Controllers\Api\V1\Cart;
 
 use App\Http\Controllers\Controller;
-use App\Models\Cart;
-use App\Models\CartItem;
 use App\Services\Api\V1\Cart\CartService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
@@ -26,8 +24,18 @@ class CartController extends Controller
      */
     public function index(Request $request)
     {
+
+
         $user = auth()->user();
         $cart = $this->cartService->getCart($user);
+        return $this->successResponse($cart, 'Cart retrieved successfully');
+    }
+
+    public function guestIndex(Request $request)
+    {
+        logger('guest: ', $request->all());
+        $guestID = $request->input('guest_id');
+        $cart = $this->cartService->getGuestCart($guestID);
         return $this->successResponse($cart, 'Cart retrieved successfully');
     }
 
@@ -39,15 +47,38 @@ class CartController extends Controller
     {
         $validated = $request->validate([
             'product_id' => 'required|exists:products,id',
-            'quantity'   => 'nullable|integer|min:1',
+            'quantity' => 'nullable|integer|min:1',
         ]);
 
         $user = auth()->user();
         $productId = $validated['product_id'];
-        $quantity  = $validated['quantity'] ?? 1;
+        $quantity = $validated['quantity'] ?? 1;
 
         try {
             $cartItem = $this->cartService->addItem($user, $productId, $quantity);
+        } catch (\Exception $e) {
+            return $this->errorResponse("Error adding to cart: {$e->getMessage()}");
+        }
+
+        return $this->createdResponse($cartItem, 'Product added to cart successfully');
+
+    }
+
+    public function storeGuest(Request $request)
+    {
+        $validated = $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'quantity' => 'nullable|integer|min:1',
+            'guest_id' => 'required',
+        ]);
+
+
+        $productId = $validated['product_id'];
+        $quantity = $validated['quantity'] ?? 1;
+        $guestID = $validated['guest_id'];
+
+        try {
+            $cartItem = $this->cartService->addItemGuest($guestID, $productId, $quantity);
         } catch (\Exception $e) {
             return $this->errorResponse("Error adding to cart: {$e->getMessage()}");
         }
@@ -85,6 +116,18 @@ class CartController extends Controller
         $user = auth()->user();
         try {
             $this->cartService->removeItem($user, $itemId);
+        } catch (\Exception $e) {
+            return $this->errorResponse("Error updating cart: {$e->getMessage()}");
+        }
+
+        return $this->successResponse(null, 'Cart item removed successfully');
+
+    }
+public function guestDestroy(Request $request, $itemId)
+    {
+        $guestID = $request->input('guest_id');
+        try {
+            $this->cartService->removeItemGuest($guestID, $itemId);
         } catch (\Exception $e) {
             return $this->errorResponse("Error updating cart: {$e->getMessage()}");
         }

@@ -4,8 +4,9 @@ namespace App\Services\Api\V1\Cart;
 
 use App\Models\Cart;
 use App\Models\CartItem;
+use App\Models\GuestCart;
+use App\Models\GuestCartItem;
 use App\Models\Product;
-use Illuminate\Support\Facades\DB;
 
 class CartService
 {
@@ -24,6 +25,24 @@ class CartService
             'items.product.brand',
             'items.product.condition',
         ]);
+        logger($cart);
+
+        return $cart;
+    }
+
+    public function getGuestCart($guestID)
+    {
+        $cart = GuestCart::firstOrCreate(['guest_id' => $guestID]);
+        $cart->load([
+            'items.product',
+            'items.product.user',
+            'items.product.photos',
+            'items.product.address',
+            'items.product.category',
+            'items.product.brand',
+            'items.product.condition',
+        ]);
+        logger($cart);
         return $cart;
     }
 
@@ -52,14 +71,42 @@ class CartService
             $cartItem->save();
         } else {
             $cartItem = CartItem::create([
-                'cart_id'    => $cart->id,
+                'cart_id' => $cart->id,
                 'product_id' => $productId,
-                'quantity'   => $quantity,
+                'quantity' => $quantity,
             ]);
         }
 
         return $cartItem->load('product', 'product.user', 'product.brand', 'product.condition', 'product.category', 'product.photos');
     }
+
+    public function addItemGuest($guestID, $productId, $quantity = 1)
+    {
+        $cart = GuestCart::firstOrCreate(['guest_id' => $guestID]);
+        $product = Product::findOrFail($productId);
+
+        if ($product->approval_status === 'pending') {
+            throw new \Exception("Product is not approved by the admin yet");
+        }
+
+        $cartItem = GuestCartItem::where('guest_cart_id', $cart->id)
+            ->where('product_id', $productId)
+            ->first();
+
+        if ($cartItem) {
+            $cartItem->quantity += $quantity;
+            $cartItem->save();
+        } else {
+            $cartItem = GuestCartItem::create([
+                'guest_cart_id' => $cart->id,
+                'product_id' => $productId,
+                'quantity' => $quantity,
+            ]);
+        }
+
+        return $cartItem->load('product', 'product.user', 'product.brand', 'product.condition', 'product.category', 'product.photos');
+    }
+
 
     /**
      * Update the quantity of an item in the user's cart.
@@ -102,6 +149,21 @@ class CartService
         $cartItem->delete();
         return true;
     }
+public function removeItemGuest($guestID, $itemId)
+    {
+        $cart = GuestCart::firstOrCreate(['guest_id' => $guestID]);
+
+        $cartItem = GuestCartItem::where('guest_cart_id', $cart->id)
+            ->where('id', $itemId)
+            ->first();
+
+        if (!$cartItem) {
+            throw new \Exception("Cart item not found");
+        }
+
+        $cartItem->delete();
+        return true;
+    }
 
     /**
      * Clear all items from the user's cart.
@@ -113,7 +175,8 @@ class CartService
         return true;
     }
 
-    public function removeItemByProductId($user, $productId) {
+    public function removeItemByProductId($user, $productId)
+    {
         $cart = Cart::firstOrCreate(['user_id' => $user->id]);
 
         $cartItem = CartItem::where('cart_id', $cart->id)

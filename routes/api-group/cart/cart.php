@@ -19,3 +19,13 @@ Route::prefix('user/cart')->middleware(['auth:sanctum', 'role:user'])->group(fun
     // Clear the entire cart.
     Route::delete('clear', [CartController::class, 'clear']);
 });
+Route::prefix('user/cart')->group(function () {
+
+    Route::get('/guest', [CartController::class, 'guestIndex']);
+
+    // Add an item to the cart.
+    Route::post('items/guest', [CartController::class, 'storeGuest']);
+    Route::delete('items/guest/{itemId}', [CartController::class, 'guestDestroy']);
+
+
+});

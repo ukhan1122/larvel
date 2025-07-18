@@ -12,12 +12,14 @@ class Address extends Model
     protected $table = 'addresses';
 
     protected $fillable = [
+        'user_id',
         'address_line_1',
         'address_line_2',
         'city',
         'state_province_or_region',
         'zip_or_postal_code',
-        'address_type'
+        'address_type',
+        'is_guest_address'
     ];
 
     protected $hidden = ['created_at', 'updated_at'];

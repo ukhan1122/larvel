@@ -13,3 +13,8 @@ Route::middleware(['auth:sanctum', 'role:user'])->prefix('cart/checkout')->group
     // Retrieve details for a specific order.
     Route::get('orders/{orderId}', [CheckoutController::class, 'getOrder']);
 });
+
+
+Route::prefix('cart/checkout')->group(function () {
+    Route::post('create/guest', [CheckoutController::class, 'checkoutGuest']);
+});

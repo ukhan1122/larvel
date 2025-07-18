@@ -14,7 +14,13 @@ return new class extends Migration
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
             // Buyer who is checking out
-            $table->unsignedBigInteger('buyer_id');
+            $table->string('buyer_id');
+
+            $table->string('guest_name')->nullable();
+            $table->string('guest_phone')->nullable();
+            $table->string('guest_email')->nullable();
+            $table->tinyInteger('is_guest_order')->default(0);
+
             // Seller for this order (each order is per seller)
             $table->unsignedBigInteger('seller_id');
             // Delivery address for the order
@@ -40,7 +46,6 @@ return new class extends Migration
             $table->timestamps();
 
 
-            $table->foreign('buyer_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('seller_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('delivery_address_id')->references('id')->on('addresses')->onDelete('cascade');
             $table->index('status');

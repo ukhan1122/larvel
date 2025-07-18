@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1\Cart;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Checkout\CheckoutRequest;
+use App\Http\Requests\Api\V1\Checkout\CheckoutRequestGuest;
 use App\Models\Order;
 use App\Services\Api\V1\Cart\CheckoutService;
 use Illuminate\Http\Request;
@@ -22,6 +23,7 @@ class CheckoutController extends Controller
      */
     public function checkout(CheckoutRequest $request)
     {
+
         // At this point, all structural & business-rule validations have passed
         $validated = $request->validated();
 
@@ -44,6 +46,37 @@ class CheckoutController extends Controller
             return response()->json([
                 'status'  => 'error',
                 'message' => $e->getMessage()
+            ], 422);
+        }
+    }
+    public function checkoutGuest(CheckoutRequestGuest $request)
+    {
+        $v       = $request->validated();
+        $guestId = $v['guest_id'];
+        $seller  = $v['seller_id'];
+        $items   = $v['cart_items'];
+        $info    = $v['guest_info'];
+
+        logger('checkoutGuest payload', [
+            'validated'  => $v,
+            'guest_id'   => $guestId,
+            'seller_id'  => $seller,
+            'cart_items' => $items,
+            'guest_info' => $info,
+        ]);
+        try {
+            $order = $this->checkoutService
+                ->processCheckoutGuest($guestId, $seller, $items, $info);
+
+            return response()->json([
+                'status'  => 'success',
+                'message' => 'Checkout completed successfully',
+                'data'    => $order,
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => $e->getMessage(),
             ], 422);
         }
     }

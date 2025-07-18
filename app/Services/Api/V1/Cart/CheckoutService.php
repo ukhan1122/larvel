@@ -5,8 +5,10 @@ namespace App\Services\Api\V1\Cart;
 use App\Helpers\ActivityLogHelper;
 use App\Mail\OrderSummaryToAdmin;
 use App\Mail\OrderSummaryToSeller;
+use App\Models\Address;
 use App\Models\Cart;
 use App\Models\CartItem;
+use App\Models\GuestCart;
 use App\Models\Product;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -139,6 +141,144 @@ class CheckoutService
 
             // 11) Return order with its items eager-loaded
             return $order->load('items');
+        });
+    }
+    public function processCheckoutGuest(
+        string $guestId,
+        int    $sellerId,
+        array  $cartItems,
+        array  $guestInfo
+    ): Order {
+        return DB::transaction(function () use (
+            $guestId,
+            $sellerId,
+            $cartItems,
+            $guestInfo
+        ) {
+            //–– 0) Create the one-off Address for this guest
+            $address = Address::create([
+                'user_id'                  => $guestId,
+                'address_line_1'           => $guestInfo['address'],
+                'address_line_2'           => $guestInfo['address_line_2'] ?? null,
+                'city'                     => $guestInfo['city'],
+                'state_province_or_region' => $guestInfo['state_province_or_region'] ?? null,
+                'zip_or_postal_code'       => $guestInfo['postal_code'],
+                'address_type'             => 'shipping',
+                'is_guest_address'             => 1,
+            ]);
+            logger($address);
+
+            $deliveryAddressId = $address->id;
+
+            //–– 1) Lock & fetch the seller’s products
+            $productIds = collect($cartItems)->pluck('product_id')->all();
+            $products   = Product::whereIn('id', $productIds)
+                ->where('user_id', $sellerId)
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id');
+
+            if ($products->count() !== count($productIds)) {
+                throw new \Exception("One or more products were not found for this seller.");
+            }
+
+            //–– 2) Build items payload & subtotal
+            $now      = now();
+            $subtotal = 0;
+            $itemsData = [];
+
+            foreach ($cartItems as $item) {
+                $p = $products[$item['product_id']];
+                if ($item['quantity'] > $p->quantity_left) {
+                    throw new \Exception("Insufficient stock for product ID {$p->id}.");
+                }
+
+                $lineTotal  = $p->price * $item['quantity'];
+                $subtotal  += $lineTotal;
+
+                $itemsData[] = [
+                    'product_id' => $p->id,
+                    'quantity'   => $item['quantity'],
+                    'price'      => $p->price,
+                    'total'      => $lineTotal,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+            }
+
+            //–– 3) Fees lookup
+            $fees = Fees::whereIn('fee_type', ['delivery','platform','market_threshold'])
+                ->pluck('fee_amount','fee_type');
+            $deliveryFee     = $fees['delivery']         ?? 0;
+            $platformFeeRate = $fees['platform']         ?? 0;
+
+            //–– 4) Totals
+            $buyerTotal        = $subtotal + $deliveryFee;
+            $platformFeeAmount = round($subtotal * $platformFeeRate, 2);
+            $sellerPayout      = round($subtotal - $platformFeeAmount, 2);
+
+            //–– 5) Create the Order (note: buyer_id = null, guest_id = UUID)
+            $order = Order::create([
+                'buyer_id'               => $guestId,
+
+                'guest_name'               => $guestInfo['first_name'] . ' ' . $guestInfo['last_name'],
+                'guest_phone'               => $guestInfo['phone'],
+                'guest_email'               => $guestInfo['email'],
+                'is_guest_order'               => 1,
+
+                'seller_id'              => $sellerId,
+                'subtotal'               => $subtotal,
+                'delivery_fee'           => $deliveryFee,
+                'platform_fee'           => $platformFeeAmount,
+                'total_amount'           => $buyerTotal,
+                'expected_delivery_date' => Carbon::now()->addDays(5),
+                'tracking_no'            => 'CLSY-'.strtoupper(Str::random(10)),
+                'status'                 => 'pending',
+                'delivery_address_id'    => $deliveryAddressId,
+                'total_seller_payout'    => $sellerPayout,
+                'market_threshold_applied'=> 0,
+            ]);
+
+            $order->load('items', 'items.product', 'seller');
+
+            //–– 6) Insert order items
+            $order->items()->createMany($itemsData);
+
+            //–– 7) Activity log + emails
+//            ActivityLogHelper::logOrderPlaced($order);
+            try {
+                Mail::to($order->seller->email)->send(new OrderSummaryToSeller($order));
+                Mail::to(config('app.admin_email'))->send(new OrderSummaryToAdmin($order));
+            } catch (\Exception $e) {
+                Log::error('Failed order emails: '.$e->getMessage());
+            }
+
+            //–– 8) Update stock
+            foreach ($cartItems as $item) {
+                $p       = $products[$item['product_id']];
+                $newLeft = $p->quantity_left - $item['quantity'];
+                $p->update([
+                    'quantity_left' => $newLeft,
+                    'sold'          => $newLeft === 0,
+                ]);
+            }
+
+            //–– 9) Adjust guest cart
+            $cart = GuestCart::firstOrCreate(['guest_id' => $guestId]);
+            $byProduct = $cart->items()
+                ->whereIn('product_id', $productIds)
+                ->get()
+                ->keyBy('product_id');
+
+            foreach ($cartItems as $item) {
+                $ci        = $byProduct[$item['product_id']];
+                $remain    = $ci->quantity - $item['quantity'];
+                $remain > 0
+                    ? $ci->update(['quantity' => $remain])
+                    : $ci->delete();
+            }
+
+            return $order;
         });
     }
 
