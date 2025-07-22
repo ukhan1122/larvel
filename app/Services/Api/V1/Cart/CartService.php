@@ -149,7 +149,8 @@ class CartService
         $cartItem->delete();
         return true;
     }
-public function removeItemGuest($guestID, $itemId)
+
+    public function removeItemGuest($guestID, $itemId)
     {
         $cart = GuestCart::firstOrCreate(['guest_id' => $guestID]);
 
@@ -185,4 +186,45 @@ public function removeItemGuest($guestID, $itemId)
 
 
     }
+
+    public function incrementItem($userId, $productID, $quantity)
+    {
+        $cart = Cart::firstOrCreate(['user_id' => $userId]);
+
+        $cartItem = CartItem::where('cart_id', $cart->id)
+            ->where('product_id', $productID)
+            ->first();
+
+        if (!$cartItem) {
+            throw new \Exception("Cart item not found");
+        }
+
+        $cartItem->quantity = $quantity;
+        $cartItem->save();
+
+        $cartItem->load('product', 'product.user', 'product.brand', 'product.condition', 'product.category', 'product.photos');
+        return $cartItem;
+    }
+    public function incrementItemGuest($guestID, $productID, $quantity)
+    {
+        // Find the guest cart
+        $cart = GuestCart::firstOrCreate(['guest_id' => $guestID]);
+
+        // Find the cart item for this product
+        $cartItem = GuestCartItem::where('guest_cart_id', $cart->id)
+            ->where('product_id', $productID)
+            ->first();
+
+        if (!$cartItem) {
+            throw new \Exception("Cart item not found");
+        }
+
+        $cartItem->quantity = $quantity;
+        $cartItem->save();
+
+        // Load relations if needed
+        $cartItem->load('product', 'product.user', 'product.brand', 'product.condition', 'product.category', 'product.photos');
+        return $cartItem;
+    }
+
 }

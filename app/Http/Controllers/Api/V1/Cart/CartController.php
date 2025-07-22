@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1\Cart;
 
 use App\Http\Controllers\Controller;
+use App\Models\Product;
 use App\Services\Api\V1\Cart\CartService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
@@ -123,7 +124,8 @@ class CartController extends Controller
         return $this->successResponse(null, 'Cart item removed successfully');
 
     }
-public function guestDestroy(Request $request, $itemId)
+
+    public function guestDestroy(Request $request, $itemId)
     {
         $guestID = $request->input('guest_id');
         try {
@@ -145,6 +147,75 @@ public function guestDestroy(Request $request, $itemId)
         $this->cartService->clearCart($user);
 
         return $this->successResponse(null, 'Cart cleared successfully');
+
+    }
+
+    public function incrementCartItem(Request $request)
+    {
+        $user = auth()->user();
+
+        $validated = $request->validate([
+            'productID' => 'required',
+            'quantity' => 'required|integer|min:1',
+        ]);
+
+        // Check available stock before proceeding
+        $product = Product::find($validated['productID']);
+        if (!$product) {
+            return $this->errorResponse("Product not found.");
+        }
+
+        if ($validated['quantity'] > $product->quantity_left) {
+            return $this->errorResponse("Requested quantity exceeds available stock.");
+        }
+
+        try {
+            $cartItem = $this->cartService->incrementItem(
+                $user->id,
+                $validated['productID'],
+                $validated['quantity']
+            );
+        } catch (\Exception $e) {
+            return $this->errorResponse("Error updating cart: {$e->getMessage()}");
+        }
+
+        return $this->successResponse($cartItem, 'Cart item updated successfully');
+    }
+
+    public function incrementCartItemGuest(Request $request)
+    {
+        $validated = $request->validate([
+            'guestID' => 'required',
+            'productID' => 'required',
+            'quantity' => 'required|integer|min:1',
+        ]);
+
+        // Check available stock before proceeding
+        $product = Product::find($validated['productID']);
+        if (!$product) {
+            return $this->errorResponse("Product not found.");
+        }
+
+        if ($validated['quantity'] > $product->quantity_left) {
+            return $this->errorResponse("Requested quantity exceeds available stock.");
+        }
+
+        try {
+            $cartItem = $this->cartService->incrementItemGuest(
+                $validated['guestID'],
+                $validated['productID'],
+                $validated['quantity']
+            );
+        } catch (\Exception $e) {
+            return $this->errorResponse("Error updating cart: {$e->getMessage()}");
+        }
+
+        return $this->successResponse($cartItem, 'Cart item updated successfully');
+    }
+
+
+    public function decrementCartItem(Request $request, $itemId)
+    {
 
     }
 }

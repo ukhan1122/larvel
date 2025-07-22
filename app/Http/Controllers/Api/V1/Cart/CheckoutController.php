@@ -114,6 +114,7 @@ class CheckoutController extends Controller
      */
     public function getOrder($orderId, Request $request)
     {
+
         $order = Order::where('buyer_id', $request->user()->id)
             ->with('items.product', 'seller')
             ->findOrFail($orderId);
@@ -132,9 +133,10 @@ class CheckoutController extends Controller
         // Get the order for this guest
         $order = Order::where('id', $orderId)
             ->where('buyer_id', $guestId)
-            ->with('items.product', 'seller')
+            ->with('items.product', 'seller', 'items.product.photos')
             ->firstOrFail();
 
+        logger('getOrderForGuest payload', [$order, $guestId]);
 
         // Fetch the address directly by delivery_address_id and user_id = guest_id (UUID)
         $address = \DB::table('addresses')

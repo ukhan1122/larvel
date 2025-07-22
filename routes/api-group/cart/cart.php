@@ -18,6 +18,8 @@ Route::prefix('user/cart')->middleware(['auth:sanctum', 'role:user'])->group(fun
 
     // Clear the entire cart.
     Route::delete('clear', [CartController::class, 'clear']);
+    Route::put('items/increment', [CartController::class, 'incrementCartItem']);
+
 });
 Route::prefix('user/cart')->group(function () {
 
@@ -26,6 +28,11 @@ Route::prefix('user/cart')->group(function () {
     // Add an item to the cart.
     Route::post('items/guest', [CartController::class, 'storeGuest']);
     Route::delete('items/guest/{itemId}', [CartController::class, 'guestDestroy']);
+
+
+    Route::put('items/guest/increment', [CartController::class, 'incrementCartItemGuest']);
+
+    Route::post('items/decrement', [CartController::class, 'decrementCartItem']);
 
 
 });
