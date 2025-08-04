@@ -44,5 +44,7 @@ return [
     'postex' => [
         'token' => env('POSTEX_TOKEN'),
     ],
-
+    'sendpk' => [
+        'api_key' => env('SENDPK_API')
+    ],
 ];

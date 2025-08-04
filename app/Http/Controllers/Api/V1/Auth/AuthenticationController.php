@@ -40,24 +40,45 @@ class AuthenticationController extends Controller
         $input = $request->validated();
         $phone = $request->get('phone');
 
+        // Add phone to the input array for User creation
+        $input['phone'] = $phone;
+
+        // Optional: Handle profile picture upload
         if ($request->hasFile('profile_picture')) {
             $file = $request->file('profile_picture');
             $filename = time() . '_' . $file->getClientOriginalName();
             $relativePath = $file->storeAs('profile_pictures', $filename, 'public');
-
-            // Store the full URL instead of just the path
             $input['profile_picture'] = asset(Storage::url($relativePath));
         }
-        $user = User::where('phone', $phone)->firstOrFail();
-        $user->update($input);
 
+        // Ensure OTP was verified first
+        $otpRow = TempOtp::where('phone', $phone)->first();
+        if (!$otpRow) {
+            return response()->json(['message' => 'Phone not verified or OTP expired'], 400);
+        }
 
+        // Hash the password before saving
+        $input['password'] = bcrypt($input['password']);
 
+        // Create the new User
+        $user = User::create($input);
+        $user->markEmailAsVerified();
+
+        // Remove temp OTP row after registration
+        $otpRow->delete();
+
+        // Generate auth token on user
+        $token = $user->createToken("User.{$user->id}.AuthToken")->plainTextToken;
+
+        // You may want to add the token to the response
         $resource = new UserResource($user);
 
-
-        return $this->createdResponse($resource, __('responses.auth.success.register'));
+        return $this->createdResponse([
+            'user'  => $resource,
+            'token' => $token,
+        ], __('responses.auth.success.register'));
     }
+
 
     public function login(LoginRequest $request) {
         $input = $request->all();
@@ -146,8 +167,6 @@ class AuthenticationController extends Controller
 
     }
 
-
-
     public function verifyPhone(Request $request)
     {
         $request->validate([
@@ -171,50 +190,23 @@ class AuthenticationController extends Controller
             ['otp' => $otp, 'expires_at' => $expiresAt]
         );
 
-        $accessToken = config('services.whatsapp.token');
-        $phoneNumberId = config('services.whatsapp.phone_number_id');
-
-        // Test with built-in "hello_world" template
-
-        $payload = [
-            'messaging_product' => 'whatsapp',
-            'to' => $request->phone, // make sure this is in E.164 format like '923224055946'
-            'type' => 'template',
-            'template' => [
-                'name' => 'closyyyy_otp_en',
-                'language' => [
-                    'code' => 'en_US'
-                ],
-                'components' => [
-                    [
-                        'type' => 'body',
-                        'parameters' => [
-                            [
-                                'type' => 'text',
-                                'text' => $otp
-                            ]
-                        ]
-                    ],
-                    [
-                        'type' => 'button',
-                        'sub_type' => 'url',
-                        'index' => 0,
-                        'parameters' => [
-                            [
-                                'type' => 'text',
-                                'text' => $otp
-                            ]
-                        ]
-                    ]
-                ]
-            ]
+        $messageData = [
+            'pin'  => $otp
         ];
 
-        $response = Http::withToken($accessToken)
-            ->withHeaders(['Content-Type' => 'application/json'])
-            ->post("https://graph.facebook.com/v22.0/{$phoneNumberId}/messages", $payload);
+        $payload = [
+            'api_key'     => config('services.sendpk.api_key'),
+            'sender'      => 'Closyyyy',
+            'mobile'      => $request->phone,
+            'template_id' => 10118,
+            'message'     => json_encode($messageData),
+            'format'      => 'json',
+        ];
 
-        Log::debug('WhatsApp API Response: ' . $response->body());
+        $response = Http::asForm()->post('https://sendpk.com/api/sms.php', $payload);
+
+
+        Log::debug('SendPK API Response: ' . $response->body());
 
         if ($response->successful()) {
             return response()->json(['message' => 'OTP (test) sent successfully']);
@@ -259,24 +251,24 @@ class AuthenticationController extends Controller
         }
 
         // ✅ OTP is valid — create user if not already created
-        $user = User::where('phone', $request->phone)->first();
-        if (!$user) {
-            logger('👤 No existing user, registering...');
-
-            $user = $this->authService->registerUser([
-                'phone' => $request->phone,
-                'email' => null,
-                'name'  => null,
-            ]);
-
-            logger('✅ User created', ['user_id' => $user->id]);
-
-            $user->assignRole('user');
-            $user->markEmailAsVerified();
-            UserPreference::create(['user_id' => $user->id]);
-        } else {
-            logger('👤 Existing user found', ['user_id' => $user->id]);
-        }
+//        $user = User::where('phone', $request->phone)->first();
+//        if (!$user) {
+//            logger('👤 No existing user, registering...');
+//
+//            $user = $this->authService->registerUser([
+//                'phone' => $request->phone,
+//                'email' => null,
+//                'name'  => null,
+//            ]);
+//
+//            logger('✅ User created', ['user_id' => $user->id]);
+//
+//            $user->assignRole('user');
+//            $user->markEmailAsVerified();
+//            UserPreference::create(['user_id' => $user->id]);
+//        } else {
+//            logger('👤 Existing user found', ['user_id' => $user->id]);
+//        }
 
         // Delete OTP after use
 
@@ -287,16 +279,16 @@ class AuthenticationController extends Controller
         logger('🔓 Auth::login() called', ['logged_in_user_id' => Auth::id()]);
 
         // ✅ Create token
-        $token = $user->createToken("User.{$user->id}.AuthToken")->plainTextToken;
-        logger('🔑 Token created', ['token' => $token]);
+//        $token = $user->createToken("User.{$user->id}.AuthToken")->plainTextToken;
+//        logger('🔑 Token created', ['token' => $token]);
 
-        $otpRecord->delete();
+//        $otpRecord->delete();
         return response()->json([
             'success' => true,
             'message' => 'Phone verified & logged in successfully',
 //            'token'   => $token,
 //            'redirect_url' => 'http://localhost:5173/seller/edit',
-            'user' => new UserResource($user),
+//            'user' => new UserResource($user),
         ], 200);
     }
 

@@ -33,7 +33,4 @@ Route::prefix('user/cart')->group(function () {
 
     Route::put('items/guest/increment', [CartController::class, 'incrementCartItemGuest']);
 
-    Route::post('items/decrement', [CartController::class, 'decrementCartItem']);
-
-
 });
