@@ -170,7 +170,7 @@ class AuthenticationController extends Controller
     public function verifyPhone(Request $request)
     {
         // Log the incoming request data
-        Log::info('Incoming phone verification request:', ['phone' => $request->phone]);
+        \Log::info('Incoming phone verification request:', ['phone' => $request->phone]);
 
         $request->validate([
             'phone' => 'required|string'
@@ -180,7 +180,7 @@ class AuthenticationController extends Controller
 
         // Log if user already exists
         if ($existingUser) {
-            Log::warning('Attempt to verify phone that already exists.', ['phone' => $request->phone]);
+            \Log::warning('Attempt to verify phone that already exists.', ['phone' => $request->phone]);
             return response()->json([
                 'message' => 'Account already exists, please login.'
             ], 409); // 409 Conflict
@@ -190,14 +190,14 @@ class AuthenticationController extends Controller
         $expiresAt = Carbon::now()->addSeconds(60);
 
         // Log OTP and expiration
-        Log::info('Generated OTP and expiry.', ['otp' => $otp, 'expires_at' => $expiresAt]);
+        \Log::info('Generated OTP and expiry.', ['otp' => $otp, 'expires_at' => $expiresAt]);
 
         // Save or update OTP
         $otpRow = TempOtp::updateOrCreate(
             ['phone' => $request->phone],
             ['otp' => $otp, 'expires_at' => $expiresAt]
         );
-        Log::info('TempOtp DB updateOrCreate result:', $otpRow->toArray());
+        \Log::info('TempOtp DB updateOrCreate result:', $otpRow->toArray());
 
         $messageData = [
             'pin'  => $otp
@@ -213,12 +213,12 @@ class AuthenticationController extends Controller
         ];
 
         // Log the payload that will be sent to SendPK
-        Log::info('SendPK SMS payload:', $payload);
+        \Log::info('SendPK SMS payload:', $payload);
 
         // Make the request and log both request and response
         $response = Http::asForm()->post('https://sendpk.com/api/sms.php', $payload);
 
-        Log::debug('SendPK API raw response:', [
+        \Log::debug('SendPK API raw response:', [
             'status' => $response->status(),
             'body'   => $response->body(),
             'json'   => $response->json(),
@@ -228,7 +228,7 @@ class AuthenticationController extends Controller
             Log::info('OTP SMS sent successfully via SendPK.', ['phone' => $request->phone, 'otp' => $otp]);
             return response()->json(['message' => 'OTP (test) sent successfully']);
         } else {
-            Log::error('Failed to send OTP SMS via SendPK.', [
+            \Log::error('Failed to send OTP SMS via SendPK.', [
                 'phone' => $request->phone,
                 'status' => $response->status(),
                 'body'   => $response->body(),
