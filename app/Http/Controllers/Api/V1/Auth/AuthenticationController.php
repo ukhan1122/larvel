@@ -224,21 +224,20 @@ class AuthenticationController extends Controller
             'json'   => $response->json(),
         ]);
 
-        if ($response->successful()) {
-            Log::info('OTP SMS sent successfully via SendPK.', ['phone' => $request->phone, 'otp' => $otp]);
-            return response()->json(['message' => 'OTP (test) sent successfully']);
-        } else {
+        if ($response->failed()) {
             \Log::error('Failed to send OTP SMS via SendPK.', [
                 'phone' => $request->phone,
                 'status' => $response->status(),
-                'body'   => $response->body(),
-                'json'   => $response->json(),
+                'body' => $response->body(),
             ]);
             return response()->json([
-                'message'     => 'Failed to send test WhatsApp message',
-                'meta_error'  => $response->json(),
+                'message' => 'Failed to send OTP',
+                'error' => $response->body() ?: 'Unknown error',
             ], 500);
         }
+
+        \Log::info('OTP SMS sent successfully via SendPK.', ['phone' => $request->phone, 'otp' => $otp]);
+        return response()->json(['message' => 'OTP (test) sent successfully']);
     }
 
     public function verifyOtp(Request $request)
