@@ -126,13 +126,14 @@ class CheckoutService
             }
 
             $postexResponse = $this->postexService->sendOrderToPostex($order, $itemsData, $products, $buyerTotal);
-
+            \Log::info('Postex Response', $postexResponse);
 
             //buyer sms
             $trackingNumber = $postexResponse['dist']['trackingNumber'] ?? null;
 
 
             if (!$trackingNumber) {
+                \Log::warning('Tracking number not found in PostEx response:', $postexResponse);
                 $trackingNumber = 'N/A';
             }
 
@@ -347,7 +348,7 @@ class CheckoutService
             $postexResponse = $this->postexService->sendOrderToPostex($order, $itemsData, $products, $buyerTotal);
 
 
-
+            \Log::info('Postex Response', $postexResponse);
 
 
             //buyer sms
@@ -355,6 +356,7 @@ class CheckoutService
 
 
             if (!$trackingNumber) {
+                \Log::warning('Tracking number not found in PostEx response:', $postexResponse);
                 $trackingNumber = 'N/A';
             }
 
