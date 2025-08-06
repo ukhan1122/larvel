@@ -33,7 +33,7 @@ class PostexService
                 'address'  => $fullAddress ?? '',
                 'phone'    => $order->buyer->phone ?? $order->guest_phone,
             ];
-            logger('PostEx Guest Info:', $guestInfo);
+
 
             $payload = [
                 "cityName"          => $guestInfo['city'],
