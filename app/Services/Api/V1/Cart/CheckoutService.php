@@ -133,7 +133,6 @@ class CheckoutService
 
 
             if (!$trackingNumber) {
-                \Log::warning('Tracking number not found in PostEx response:', $postexResponse);
                 $trackingNumber = 'N/A';
             }
 
@@ -356,7 +355,6 @@ class CheckoutService
 
 
             if (!$trackingNumber) {
-                \Log::warning('Tracking number not found in PostEx response:', $postexResponse);
                 $trackingNumber = 'N/A';
             }
 
