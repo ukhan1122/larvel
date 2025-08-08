@@ -13,11 +13,13 @@ class ProductService
 {
     protected $productRepository;
     protected $photoRepository;
+    protected $imageKitService;
 
-    public function __construct(ProductRepository $productRepository, PhotoRepository $photoRepository)
+    public function __construct(ProductRepository $productRepository, PhotoRepository $photoRepository,ImageKitService  $imageKitService)
     {
         $this->productRepository = $productRepository;
         $this->photoRepository   = $photoRepository;
+        $this->imageKitService   = $imageKitService;
     }
 
     /**
@@ -35,16 +37,15 @@ class ProductService
 
             // Process each image file if provided.
             if ($images) {
+
+                /** @var ImageKitService $ik */
+                $ik = app(ImageKitService::class); // resolve without changing constructor
+
                 foreach ($images as $image) {
                     if ($image instanceof UploadedFile) {
-                        // Generate a unique filename.
-                        $filename = time() . '_' . $image->getClientOriginalName();
-                        // Store the image in the 'products' folder on the public disk.
-                        $relativePath = $image->storeAs('products', $filename, 'public');
 
-                        $fullUrl = asset(Storage::url($relativePath));
-
-                        // Save the photo record linked to the product.
+                        $upload  = $ik->upload($image, "/products/{$product->id}");
+                        $fullUrl = $upload['url'] ?? null;
                         $this->photoRepository->create([
                             'product_id' => $product->id,
                             'image_path' => $fullUrl,
