@@ -35,7 +35,7 @@ class CheckoutRequestGuest extends FormRequest
             'guest_info.last_name'        => ['required', 'string', 'max:50'],
             'guest_info.city'             => ['required', 'string', 'max:100'],
             'guest_info.address'          => ['required', 'string', 'max:255'],
-            'guest_info.postal_code'      => ['required', 'string', 'max:20'],
+            'guest_info.postal_code'      => ['string', 'max:20'],
             'guest_info.phone'            => ['required', 'string', 'max:20'],
             'guest_info.subscribe'        => ['boolean'],
             'guest_info.save_info'        => ['boolean'],
