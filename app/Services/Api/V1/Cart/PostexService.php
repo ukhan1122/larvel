@@ -27,7 +27,7 @@ class PostexService
             );
 
             $guestInfo = [
-                'city'     => $order->address->city,
+                'city'     => $address->city,
                 'first_name' => $order->buyer->first_name ?? $order->guest_name,
                 'last_name'  => $order->buyer->last_name ?? '',
                 'address'  => $fullAddress ?? '',
