@@ -118,7 +118,7 @@ class ProductController extends Controller
         $id = last(explode('-', $slug));
 
         $product = Product::with(['user', 'category', 'brand', 'condition', 'photos', 'address', 'size'])
-            ->where('approval_status', '!=', 'pending')
+            ->where('approval_status', 'approved')
             ->find($id);
 
         if (!$product) {
@@ -131,7 +131,8 @@ class ProductController extends Controller
     public function search(Request $request)
     {
         $query = Product::with(['user', 'category', 'brand', 'condition', 'photos', 'address', 'size'])
-            ->where('approval_status', '!=', 'pending');
+            ->where('approval_status', 'approved');
+
 
         if ($request->filled('category_id')) {
             $query->where('category_id', $request->get('category_id'));
@@ -185,7 +186,7 @@ class ProductController extends Controller
             ->orderBy('id')
             ->get(['id', 'name']);
 
-        $products = Product::select('id', 'brand_id')->where('approval_status', '!=', 'pending')
+        $products = Product::select('id', 'brand_id')->where('approval_status', 'approved')
             ->whereIn('category_id', $cats->pluck('id')->toArray())->get();
 
         $brands = Brand::whereIn('id', $products->pluck('brand_id')->toArray())->get();
@@ -240,7 +241,7 @@ class ProductController extends Controller
 
         // 2) Build products query
         $q = \App\Models\Product::with(['user', 'category', 'brand', 'condition', 'photos', 'address', 'size'])
-            ->where('approval_status', '!=', 'pending');
+            ->where('approval_status',  'approved');
 
         if (!empty($categoryIds)) {
             $q->whereIn('category_id', $categoryIds);
@@ -417,7 +418,7 @@ class ProductController extends Controller
 
         // 2) Build base query
         $q = Product::with(['user', 'category', 'brand', 'condition', 'photos', 'address', 'size'])
-            ->where('approval_status', '!=', 'pending');
+            ->where('approval_status', 'approved');
 
         if (!empty($categoryIds)) {
             $q->whereIn('category_id', $categoryIds);
