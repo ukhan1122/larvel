@@ -524,12 +524,13 @@ class ProductController extends Controller
     public function getMenProducts()
     {
         $products = Product::with(['user', 'category', 'brand', 'condition', 'photos', 'address', 'size'])
-        ->whereHas('category', function ($query) {
-            $query->where('group', 'Men');
-        })
+            ->whereHas('category', function ($query) {
+                $query->where('group', 'Men');
+            })
+            ->where('approval_status', 'approved')   // must be approved
+            ->where('quantity_left', '>=', 1)        // must have stock
             ->orderBy('created_at', 'desc')
             ->limit(8)
-
             ->get();
 
         return $products;
@@ -541,6 +542,8 @@ class ProductController extends Controller
             ->whereHas('category', function ($query) {
             $query->where('group', 'Women');
         })
+            ->where('approval_status', 'approved')   // must be approved
+            ->where('quantity_left', '>=', 1)        // must have stock
             ->orderBy('created_at', 'desc')
             ->limit(8)
             ->get();
@@ -554,6 +557,8 @@ class ProductController extends Controller
             ->whereHas('category', function ($query) {
             $query->where('group', 'Kids');
         })
+            ->where('approval_status', 'approved')   // must be approved
+            ->where('quantity_left', '>=', 1)        // must have stock
             ->orderBy('created_at', 'desc')
             ->limit(8)
 
