@@ -382,55 +382,63 @@ class ProductController extends Controller
         return $this->successResponse($product, 'Product photos updated successfully');
     }
 
+
     public function newProductsFetch(Request $request, ?string $group = null, ?string $category = null)
     {
-        // pagination + sort
+        \Log::info('newProductsFetch called', [
+            'full_url'  => $request->fullUrl(),
+            'path'      => $request->path(),
+            'group'     => $group,
+            'category'  => $category,
+            'query'     => $request->query(),
+        ]);
+
         $perPage = max(1, min((int)$request->input('per_page', 8), 60));
-        $sort = $request->input('sort', 'newest'); // newest|price_asc|price_desc
+        $sort    = $request->input('sort', 'newest');
 
-        // normalize slugs from path (slug mode)
-        $groupNorm = $group ? ucfirst(strtolower($group)) : null; // Men|Women|Kids|Beauty
-        $categorySlug = $category ? strtolower($category) : null;    // tops|bottoms|coats-and-jackets
+        $groupSlug = $group ? strtolower($group) : null;
 
-        // 1) Determine category IDs
-        $categoryIds = [];
-        if ($request->filled('category_id')) {
-            $categoryIds = [(int)$request->input('category_id')];
-        } elseif ($groupNorm) {
-            $catQ = Category::query()->where('group', $groupNorm);
-            if ($categorySlug) {
-                $map = [
-                    'top' => 'Tops',
-                    'tops' => 'Tops',
-                    'bottom' => 'Bottoms',
-                    'bottoms' => 'Bottoms',
-                    'coats-and-jackets' => 'Coats and jackets',
-                ];
-                $dbName = $map[$categorySlug] ?? ucfirst($categorySlug);
-                $catQ->where('name', $dbName);
+        $q = Product::with(['user','category','brand','condition','photos','address','size'])
+            ->where('approval_status', 'approved')
+            ->where('quantity_left', '>=', 1);
+
+        // --- Category logic ---
+        // Treat empty strings as "not provided"
+        $categoryIdParam = $request->query('category_id', null);
+        $categoryIdParam = is_string($categoryIdParam) ? trim($categoryIdParam) : $categoryIdParam;
+
+        if ($categoryIdParam !== null && $categoryIdParam !== '') {
+            // category_id provided -> filter by it
+            $q->where('category_id', (int)$categoryIdParam);
+        } elseif ($groupSlug) {
+            // category_id missing/empty -> load all category IDs for this group
+            $catIds = Category::query()
+                ->whereRaw('LOWER(`group`) = ?', [$groupSlug])
+                ->pluck('id')
+                ->all();
+
+            // If no categories for this group, return empty set quickly
+            if (empty($catIds)) {
+                return response()->json([
+                    'status' => 'success',
+                    'data'   => [
+                        'data'         => [],
+                        'current_page' => 1,
+                        'last_page'    => 1,
+                        'total'        => 0,
+                    ],
+                ]);
             }
-            $cats = $catQ->get(['id']);
-            if ($cats->isEmpty() && $categorySlug) {
-                return response()->json(['status' => 'error', 'message' => 'Category not found'], 404);
-            }
-            $categoryIds = $cats->pluck('id')->all();
-        }
 
-        // 2) Build base query
-        $q = Product::with(['user', 'category', 'brand', 'condition', 'photos', 'address', 'size'])
-            ->where('approval_status', 'approved');
+            $q->whereIn('category_id', $catIds);
+        }
+        // --- end Category logic ---
 
-        if (!empty($categoryIds)) {
-            $q->whereIn('category_id', $categoryIds);
-        }
-        if ($request->filled('brand_id')) {
-            $q->where('brand_id', (int)$request->input('brand_id'));
-        }
-        if ($request->filled('condition_id')) {
-            $q->where('condition_id', (int)$request->input('condition_id'));
-        }
+        // Optional filters
+        if ($request->filled('brand_id'))     $q->where('brand_id', (int)$request->input('brand_id'));
+        if ($request->filled('condition_id')) $q->where('condition_id', (int)$request->input('condition_id'));
 
-        // Size filter: support size_id or size code "S|M|L|XL"
+        // Size (id or code S|M|L|XL)
         if ($request->filled('size_id')) {
             $q->where('size_id', (int)$request->input('size_id'));
         } elseif ($request->filled('size')) {
@@ -439,29 +447,27 @@ class ProductController extends Controller
         }
 
         // Price range
-        if ($request->filled('min_price')) {
-            $q->where('price', '>=', (float)$request->input('min_price'));
-        }
-        if ($request->filled('max_price')) {
-            $q->where('price', '<=', (float)$request->input('max_price'));
-        }
+        if ($request->filled('min_price')) $q->where('price', '>=', (float)$request->input('min_price'));
+        if ($request->filled('max_price')) $q->where('price', '<=', (float)$request->input('max_price'));
 
-        // sorting
+        // Sorting
         match ($sort) {
-            'price_asc' => $q->orderBy('price', 'asc'),
+            'price_asc'  => $q->orderBy('price', 'asc'),
             'price_desc' => $q->orderBy('price', 'desc'),
-            'newest' => $q->orderBy('id', 'desc'),
-            default => $q->latest(),
+            'newest'     => $q->orderBy('id', 'desc'),
+            default      => $q->latest(),
         };
 
-        // Paginate
         $products = $q->paginate($perPage)->appends($request->query());
 
         return response()->json([
             'status' => 'success',
-            'data' => $products,
+            'data'   => $products,
         ]);
     }
+
+
+
 
     // ------------- Filter sources -------------
 

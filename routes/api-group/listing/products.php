@@ -47,10 +47,11 @@ Route::prefix('public/products')->group(function () {
     Route::get('/{brand}/{slug}', [ProductController::class, 'showSingle']);
 
 
-    Route::get('search', [ProductController::class, 'newProductsFetch']);
-
-    // Slug-mode (your working pattern):
-    Route::get('search/{group}/{category?}', [ProductController::class, 'newProductsFetch']);
+    Route::get('the/search/{group?}/{category?}', [ProductController::class, 'newProductsFetch'])
+        ->where([
+            'group'    => '[A-Za-z\-]+',
+            'category' => '[A-Za-z\-]+',
+        ]);
 
     // Filter sources
     Route::get('the/categories/{group}',  [ProductController::class, 'listCategoriesByGroup']);
