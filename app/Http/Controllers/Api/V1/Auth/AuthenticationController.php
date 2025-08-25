@@ -63,7 +63,7 @@ class AuthenticationController extends Controller
         // Create the new User
         $user = User::create($input);
         $user->markEmailAsVerified();
-
+        $user->assignRole('user');
         // Remove temp OTP row after registration
         $otpRow->delete();
 
