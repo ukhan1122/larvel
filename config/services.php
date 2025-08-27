@@ -53,4 +53,27 @@ return [
         'url_endpoint'  => env('IMAGEKIT_URL_ENDPOINT'),
     ],
 
+    'blueex' => [
+        'username'              => env('BLUEEX_USERNAME', 'closyyyy'),
+        'password'              => env('BLUEEX_PASSWORD', '12345'),
+        'endpoint'              => env('BLUEEX_ENDPOINT', 'https://apis.blue-ex.com/api/V4/CreateBooking'),
+        'service_code'          => env('BLUEEX_SERVICE_CODE', 'BG'),
+        'payment_type'          => env('BLUEEX_PAYMENT_TYPE', 'COD'),
+        'fragile'               => env('BLUEEX_FRAGILE', 'N'),
+        'parcel_type'           => env('BLUEEX_PARCEL_TYPE', 'P'),
+        'insurance_require'     => env('BLUEEX_INSURANCE_REQUIRE', 'N'),
+        'insurance_value'       => env('BLUEEX_INSURANCE_VALUE', '0'),
+        'testbit'               => env('BLUEEX_TESTBIT', 'Y'),
+        'cn_generate'           => env('BLUEEX_CN_GENERATE', 'Y'),
+        'multi_pickup'          => env('BLUEEX_MULTI_PICKUP', 'Y'),
+        'default_item_weight'   => env('BLUEEX_DEFAULT_ITEM_WEIGHT', 0.5),
+        'default_total_weight'  => env('BLUEEX_DEFAULT_TOTAL_WEIGHT', 1.0),
+
+        // shipper fallbacks if seller profile lacks address
+        'default_shipper_name'    => env('BLUEEX_DEFAULT_SHIPPER_NAME', 'Closyyyy Seller'),
+        'default_shipper_email'   => env('BLUEEX_DEFAULT_SHIPPER_EMAIL', 'noreply@closyyyy.test'),
+        'default_shipper_phone'   => env('BLUEEX_DEFAULT_SHIPPER_PHONE', '03000000000'),
+        'default_shipper_address_line_1' => env('BLUEEX_DEFAULT_SHIPPER_ADDR1', 'Pickup Location'),
+        'default_shipper_city'    => env('BLUEEX_DEFAULT_SHIPPER_CITY', 'Karachi'),
+    ],
 ];

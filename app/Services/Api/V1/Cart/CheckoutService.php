@@ -23,9 +23,10 @@ class CheckoutService
 {
     protected $postexService;
 
-    public function __construct(PostexService $postexService)
+    public function __construct(PostexService $postexService, BlueExService $blueExService)
     {
         $this->postexService = $postexService;
+        $this->blueExService = $blueExService;
     }
 
     public function processCheckout(User $buyer, int $sellerId, array $cartItems, int $deliveryAddressId): Order
@@ -126,14 +127,18 @@ class CheckoutService
             }
 
             $postexResponse = $this->postexService->sendOrderToPostex($order, $itemsData, $products, $buyerTotal);
+            $blueEXResponse = $this->blueExService->sendOrderToBlueEx($order, $itemsData, $products, $buyerTotal);
+
             \Log::info('Postex Response', $postexResponse);
+            \Log::info('BlueEX Response', $blueEXResponse);
 
             //buyer sms
-            $trackingNumber = $postexResponse['dist']['trackingNumber'] ?? null;
+//            $trackingNumber = $postexResponse['dist']['trackingNumber'] ?? null;
+            $trackingNumber = $blueEXResponse['cnno'] ?? null;
 
 
             if (!$trackingNumber) {
-                \Log::warning('Tracking number not found in PostEx response:', $postexResponse);
+                \Log::warning('Tracking number not found in PostEx response:', $blueEXResponse);
                 $trackingNumber = 'N/A';
             }
 
@@ -165,7 +170,7 @@ class CheckoutService
             } catch (\Exception $e) {
                 Log::error('Failed order sms: ' . $e->getMessage());
             }
-            //buyer sms
+//            buyer sms
 
             //seller sms
             $messageData = [
@@ -346,13 +351,16 @@ class CheckoutService
             }
 
             $postexResponse = $this->postexService->sendOrderToPostex($order, $itemsData, $products, $buyerTotal);
-
+            $blueEXResponse = $this->blueExService->sendOrderToBlueEx($order, $itemsData, $products, $buyerTotal);
 
             \Log::info('Postex Response', $postexResponse);
+            \Log::info('BlueEX Response', $blueEXResponse);
+
 
 
             //buyer sms
-            $trackingNumber = $postexResponse['dist']['trackingNumber'] ?? null;
+//            $trackingNumber = $postexResponse['dist']['trackingNumber'] ?? null;
+            $trackingNumber = $blueEXResponse['cnno'] ?? null;
 
 
             if (!$trackingNumber) {
