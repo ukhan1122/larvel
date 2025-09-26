@@ -9,6 +9,7 @@ Route::prefix('user/cart')->middleware(['auth:sanctum', 'role:user'])->group(fun
 
     // Add an item to the cart.
     Route::post('items', [CartController::class, 'store']);
+    Route::post('offers/items', [CartController::class, 'offersStore']);
 
     // Update a cart item's quantity.
     Route::put('items/{itemId}', [CartController::class, 'update']);

@@ -74,6 +74,41 @@ class CartService
                 'cart_id' => $cart->id,
                 'product_id' => $productId,
                 'quantity' => $quantity,
+                'price' => $product->price,
+                'price_source' => 'list',
+            ]);
+        }
+
+        return $cartItem->load('product', 'product.user', 'product.brand', 'product.condition', 'product.category', 'product.photos');
+    }public function addOfferItems($user, $productId, $quantity,$offerId,$price)
+    {
+        $cart = Cart::firstOrCreate(['user_id' => $user->id]);
+        $product = Product::findOrFail($productId);
+
+        if ($product->approval_status === 'pending') {
+            throw new \Exception("Product is not approved by the admin yet");
+        }
+
+        if ($product->user_id === $user->id) {
+            throw new \Exception("You cannot add your own product to cart");
+        }
+
+        $cartItem = CartItem::where('cart_id', $cart->id)
+            ->where('product_id', $productId)
+            ->where('offer_id', $offerId)
+            ->first();
+
+        if ($cartItem) {
+//            $cartItem->quantity += $quantity;
+            $cartItem->save();
+        } else {
+            $cartItem = CartItem::create([
+                'cart_id' => $cart->id,
+                'product_id' => $productId,
+                'quantity' => $quantity,
+                'price' => $price,
+                'price_source' => 'offer',
+                'offer_id' => $offerId,
             ]);
         }
 

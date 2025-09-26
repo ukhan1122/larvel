@@ -65,6 +65,34 @@ class CartController extends Controller
 
     }
 
+    public function offersStore(Request $request)
+    {
+        \Log::info('Incoming request', [
+            'Request' => $request->all()
+        ]);
+        $validated = $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'quantity' => 'nullable|integer|min:1',
+            'offer_id' => 'required|exists:offers,id',
+            'offer_price' => 'required',
+        ]);
+
+        $user = auth()->user();
+        $productId = $validated['product_id'];
+        $offerId = $validated['offer_id'];
+        $quantity = $validated['quantity'] ?? 1;
+        $price = $validated['offer_price'] ?? 1;
+
+        try {
+            $cartItem = $this->cartService->addOfferItems($user, $productId, $quantity,$offerId,$price);
+        } catch (\Exception $e) {
+            return $this->errorResponse("Error adding to cart: {$e->getMessage()}");
+        }
+
+        return $this->createdResponse($cartItem, 'Product added to cart successfully');
+
+    }
+
     public function storeGuest(Request $request)
     {
         $validated = $request->validate([

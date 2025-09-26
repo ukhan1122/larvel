@@ -4,7 +4,9 @@ namespace App\Providers;
 
 use App\Mail\ProductPosted;
 use App\Mail\ProductStatusUpdate;
+use App\Models\Offer;
 use App\Models\Product;
+use App\Observers\OffersObserver;
 use App\Observers\ProductObserver;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
@@ -32,6 +34,7 @@ class EventServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Product::observe(ProductObserver::class);
+        Offer::observe(OffersObserver::class);
     }
 
     /**

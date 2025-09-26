@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\V1\Checkout;
 
+use App\Models\Offer;
 use Illuminate\Foundation\Http\FormRequest;
 
 use Illuminate\Validation\Rule;
@@ -45,6 +46,7 @@ class CheckoutRequest extends FormRequest
                         ->where('user_id', auth()->id());
                 }),
             ],
+            'cart_items.*.offer_id' => 'nullable|string|exists:offers,id',
         ];
     }
 
@@ -81,6 +83,21 @@ class CheckoutRequest extends FormRequest
                         "cart_items.{$i}.quantity",
                         "Line total for product ID {$product->id} exceeds allowed maximum."
                     );
+                }
+
+                // 4) Validate offer_id if provided
+                if (isset($item['offer_id']) && $item['offer_id'] !== null) {
+                    $offer = Offer::where('id', $item['offer_id'])
+                        ->where('product_id', $item['product_id'])
+                        ->where('seller_id', $sellerId)
+                        ->first();
+
+                    if (!$offer) {
+                        $validator->errors()->add(
+                            "cart_items.{$i}.offer_id",
+                            "Offer ID {$item['offer_id']} is invalid or inactive for product ID {$item['product_id']}."
+                        );
+                    }
                 }
             }
         });

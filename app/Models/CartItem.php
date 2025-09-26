@@ -11,7 +11,7 @@ class CartItem extends Model
 
     protected $table = 'cart_items';
 
-    protected $fillable = ['cart_id', 'product_id', 'quantity'];
+    protected $fillable = ['cart_id', 'product_id', 'quantity','price','price_source','offer_id'];
 
     protected $hidden = ['created_at', 'updated_at'];
 

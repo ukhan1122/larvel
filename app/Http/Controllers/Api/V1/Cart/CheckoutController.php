@@ -23,8 +23,6 @@ class CheckoutController extends Controller
      */
     public function checkout(CheckoutRequest $request)
     {
-
-        // At this point, all structural & business-rule validations have passed
         $validated = $request->validated();
 
         try {
@@ -87,6 +85,8 @@ class CheckoutController extends Controller
      */
     public function getOrders(Request $request)
     {
+        logger('guest: ', $request->all());
+
         $type = $request->query('type', 'sold'); // default is 'sold'
         $userId = $request->user()->id;
 
@@ -95,7 +95,7 @@ class CheckoutController extends Controller
                 ->with(['items.product', 'items.product.photos', 'seller', 'deliveryAddress'])
                 ->orderBy('created_at', 'desc')
                 ->get();
-        } else { // default or 'sold'
+        } else { // default or 'sold'.
             $orders = Order::where('seller_id', $userId)
                 ->with(['items.product', 'items.product.photos', 'buyer', 'deliveryAddress'])
                 ->orderBy('created_at', 'desc')
@@ -114,7 +114,7 @@ class CheckoutController extends Controller
      */
     public function getOrder($orderId, Request $request)
     {
-
+dd(1);
         $order = Order::where('buyer_id', $request->user()->id)
             ->with('items.product', 'seller')
             ->findOrFail($orderId);

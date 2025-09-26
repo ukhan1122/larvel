@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Offer extends Model
+class   Offer extends Model
 {
     use HasFactory;
 
@@ -13,12 +13,13 @@ class Offer extends Model
 
     protected $fillable = [
         'product_id',
-        'offerer_id',
-        'offer_price',
+        'seller_id',
+        'buyer_id',
+        'actor_id',
+        'action',
+        'price',
         'status',
-        'counter_price',
         'message',
-        'last_reply_by'
     ];
 
     /**
@@ -32,16 +33,24 @@ class Offer extends Model
     /**
      * The user who made the offer.
      */
-    public function offerer()
+    public function seller()
     {
-        return $this->belongsTo(User::class, 'offerer_id');
+        return $this->belongsTo(User::class, 'seller_id');
     }
 
     /**
-     * Get the user who last replied.
+     * The user who is making the purchase (buyer).
      */
-    public function lastReplyBy()
+    public function buyer()
     {
-        return $this->belongsTo(User::class, 'last_reply_by');
+        return $this->belongsTo(User::class, 'buyer_id');
+    }
+
+    /**
+     * The user who performed this action (could be buyer or seller).
+     */
+    public function actor()
+    {
+        return $this->belongsTo(User::class, 'actor_id');
     }
 }

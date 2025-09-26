@@ -13,29 +13,33 @@ return new class extends Migration
     {
         Schema::create('offers', function (Blueprint $table) {
             $table->id();
-            // The product for which the offer is made.
+
+            // Thread identifiers
             $table->unsignedBigInteger('product_id');
-            // User that replied last
-            $table->unsignedBigInteger('last_reply_by')->nullable();
-            // The user making the offer.
-            $table->unsignedBigInteger('offerer_id');
-            // The offered amount.
-            $table->decimal('offer_price', 10, 2);
-            // Status: pending, accepted, rejected, countered.
+            $table->unsignedBigInteger('seller_id');   // owner of product
+            $table->unsignedBigInteger('buyer_id');    // the other party
+            $table->unsignedBigInteger('actor_id');    // who performed this row
+
+            // Action / state
+            $table->enum('action', ['offer','counter','accept','decline','message','cancel'])
+                ->default('offer');
+            $table->decimal('price', 10, 2)->nullable();
             $table->string('status')->default('pending');
-            // If countered, the counter offer price.
-            $table->decimal('counter_price', 10, 2)->nullable();
-            // Optional message attached with the offer.
             $table->text('message')->nullable();
+
             $table->timestamps();
 
-            // Foreign keys and indexing.
+            // Foreign keys
             $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade');
-            $table->foreign('offerer_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('last_reply_by')->references('id')->on('users')->onDelete('set null');
+            $table->foreign('seller_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('buyer_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('actor_id')->references('id')->on('users')->onDelete('cascade');
+
+            // Indexes for common queries
+            $table->index(['product_id','buyer_id','seller_id','created_at']);
+            $table->index(['seller_id','created_at']);
+            $table->index(['buyer_id','created_at']);
             $table->index('status');
-            $table->index('product_id');
-            $table->index('offerer_id');
         });
     }
 

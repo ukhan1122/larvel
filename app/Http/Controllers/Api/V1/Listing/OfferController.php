@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Api\V1\Listing;
 
 use App\Http\Controllers\Controller;
+use App\Models\Offer;
 use App\Services\Api\V1\Listing\OfferService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class OfferController extends Controller
 {
@@ -23,10 +25,11 @@ class OfferController extends Controller
      */
     public function createOffer(Request $request)
     {
+
         $validated = $request->validate([
-            'product_id'  => 'required|exists:products,id',
+            'product_id' => 'required|exists:products,id',
             'offer_price' => 'required|numeric|min:0',
-            'message'     => 'nullable|string'
+            'message' => 'nullable|string'
         ]);
 
         try {
@@ -38,12 +41,56 @@ class OfferController extends Controller
         }
     }
 
+
+    public function updateOfferPrice(Request $request, $offerId)
+    {
+        // Log the request data and id
+        Log::info('Update Offer Price Request', [
+            'offer_id' => $offerId,
+            'request_data' => $request->all(),
+            'user_id' => $request->user() ? $request->user()->id : null,
+        ]);
+
+        $validated = $request->validate([
+            'offer_price' => 'required|numeric|min:0', // Changed from 'price' to 'offer_price'
+            'product_id' => 'required|exists:products,id', // Validate product_id
+            'message' => 'nullable|string', // Optional message
+        ]);
+
+        try {
+            // Pass the offerId and validated data to the service
+            $offer = $this->offerService->updateOfferPrice(request()->user(), $offerId, $validated);
+
+            // Log successful update
+            Log::info('Offer updated successfully', ['offer_id' => $offer->id]);
+
+            return $this->createdResponse($offer, 'Offer updated successfully.');
+        } catch (\Exception $e) {
+            // Log the error
+            Log::error('Error updating offer', ['offer_id' => $offerId, 'error' => $e->getMessage()]);
+
+            return $this->errorResponse("{$e->getMessage()}");
+        }
+    }
+
     /**
      * Get offers received (for products owned by the authenticated user).
      */
     public function getReceivedOffers(Request $request)
     {
+//        Log::info('Incoming request', [
+//            'user' => $request->user()->toArray()
+//        ]);
         $offers = $this->offerService->getReceivedOffers($request->user());
+        return $this->successResponse($offers, 'Received offers retrieved successfully');
+    }
+
+    public function getOfferConversation(Request $request)
+    {
+        Log::info('Incoming request', [
+            'user' => $request
+        ]);
+        $offers = $this->offerService->getOfferConversation($request);
         return $this->successResponse($offers, 'Received offers retrieved successfully');
     }
 
@@ -74,6 +121,10 @@ class OfferController extends Controller
      */
     public function rejectOffer(Request $request, $offerId)
     {
+//                Log::info('Incoming request', [
+//            'user' => $request->user(),
+//            'OD' => $offerId,
+//        ]);
         try {
             $offer = $this->offerService->rejectOffer($request->user(), $offerId);
             return $this->successResponse($offer, 'Offer rejected successfully');
@@ -85,18 +136,29 @@ class OfferController extends Controller
     /**
      * Counter an offer.
      */
+
     public function counterOffer(Request $request, $offerId)
     {
+        // Body must only contain "price"
         $validated = $request->validate([
-            'counter_price' => 'required|numeric|min:0',
-            'message'       => 'nullable|string'
+            'price' => 'required|numeric|min:0',
+            // Do NOT require offer_id in body since it's in the route
         ]);
 
+        $user = $request->user();               // current authenticated seller
+        $baseOffer = Offer::findOrFail($offerId);
+
         try {
-            $offer = $this->offerService->counterOffer($request->user(), $offerId, $validated);
-            return $this->successResponse($offer, 'Counter offer submitted successfully');
-        } catch (\Exception $e) {
-            return $this->errorResponse("{$e->getMessage()}");
+            $newOffer = $this->offerService->counterOffer(
+                baseOffer: $baseOffer,
+                user: $user,
+                price: (float) $validated['price'],
+                message: $request->input('message') // optional
+            );
+
+            return $this->createdResponse($newOffer, 'Counter offer created successfully.');
+        } catch (\Throwable $e) {
+            return $this->errorResponse($e->getMessage(), 422);
         }
     }
 }

@@ -9,6 +9,7 @@ use App\Models\Address;
 use App\Models\Cart;
 use App\Models\Fees;
 use App\Models\GuestCart;
+use App\Models\Offer;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
@@ -51,18 +52,38 @@ class CheckoutService
             // 2) Build order-items payload and compute subtotal
             foreach ($cartItems as $item) {
                 $product = $products[$item['product_id']];
+                $offerId = isset($item['offer_id']) ? (int)$item['offer_id'] : null;
 
+                \Log::info('Processing cart item', [
+                    'product_id' => $item['product_id'],
+                    'quantity' => $item['quantity'],
+                    'offer_id' => $offerId,
+                ]);
                 if ($item['quantity'] > $product->quantity_left) {
                     throw new \Exception("Insufficient stock for product ID {$product->id}.");
                 }
 
-                $lineTotal = $product->price * $item['quantity'];
+                $offer = null;
+                if ($offerId) {
+                    $offer = Offer::where('id', $offerId)
+                        ->where('product_id', $item['product_id'])
+                        ->where('seller_id', $sellerId)
+                        ->first();
+
+                    // Since validation in CheckoutRequest already checks this, the offer should exist
+                    if (!$offer) {
+                        throw new \Exception("Invalid or inactive offer for product ID {$item['product_id']}.");
+                    }
+                }
+
+                $price = $offer ? $offer->price : $product->price;
+                $lineTotal = $price * $item['quantity'];
                 $subtotal += $lineTotal;
 
                 $itemsData[] = [
                     'product_id' => $product->id,
                     'quantity' => $item['quantity'],
-                    'price' => $product->price,
+                    'price' => $price,
                     'total' => $lineTotal,
                     'created_at' => $now,
                     'updated_at' => $now,
@@ -95,7 +116,8 @@ class CheckoutService
                 'status' => 'pending',
                 'delivery_address_id' => $deliveryAddressId,
                 'total_seller_payout' => $sellerPayout,
-                'market_threshold_applied' => 0
+                'market_threshold_applied' => 0,
+                'offer_id' => $offerId ?? null
             ]);
 
             $order->load('items', 'items.product', 'buyer', 'seller');
