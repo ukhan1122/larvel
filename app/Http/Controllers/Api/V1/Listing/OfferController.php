@@ -137,9 +137,7 @@ class OfferController extends Controller
      * Counter an offer.
      */
 
-<?php
 
-    use Illuminate\Support\Facades\Log;
 
     public function counterOffer(Request $request, $offerId)
     {
