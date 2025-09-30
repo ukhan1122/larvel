@@ -137,18 +137,48 @@ class OfferController extends Controller
      * Counter an offer.
      */
 
+<?php
+
+    use Illuminate\Support\Facades\Log;
+
     public function counterOffer(Request $request, $offerId)
     {
-        // Body must only contain "price"
-        $validated = $request->validate([
-            'price' => 'required|numeric|min:0',
-            // Do NOT require offer_id in body since it's in the route
+        // Log the incoming request details
+        Log::info('CounterOffer endpoint called', [
+            'offer_id' => $offerId,
+            'user_id' => $request->user() ? $request->user()->id : null,
+            'ip' => $request->ip(),
+            'input' => $request->all(),
+            'headers' => $request->headers->all(),
         ]);
 
-        $user = $request->user();               // current authenticated seller
-        $baseOffer = Offer::findOrFail($offerId);
-
         try {
+            // Validate the request
+            $validated = $request->validate([
+                'price' => 'required|numeric|min:0',
+                // Do NOT require offer_id in body since it's in the route
+            ]);
+
+            $user = $request->user(); // Current authenticated seller
+            if (!$user) {
+                Log::warning('No authenticated user found for counterOffer', [
+                    'offer_id' => $offerId,
+                    'ip' => $request->ip(),
+                ]);
+                return $this->errorResponse('Unauthenticated', 401);
+            }
+
+            $baseOffer = Offer::findOrFail($offerId);
+
+            // Log the base offer details
+            Log::info('Base offer retrieved', [
+                'offer_id' => $baseOffer->id,
+                'product_id' => $baseOffer->product_id,
+                'buyer_id' => $baseOffer->buyer_id,
+                'seller_id' => $baseOffer->seller_id,
+                'price' => $baseOffer->price,
+            ]);
+
             $newOffer = $this->offerService->counterOffer(
                 baseOffer: $baseOffer,
                 user: $user,
@@ -156,8 +186,37 @@ class OfferController extends Controller
                 message: $request->input('message') // optional
             );
 
+            // Log successful counter offer creation
+            Log::info('Counter offer created successfully', [
+                'new_offer_id' => $newOffer->id,
+                'price' => $newOffer->price,
+                'user_id' => $user->id,
+            ]);
+
             return $this->createdResponse($newOffer, 'Counter offer created successfully.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Log validation errors
+            Log::error('Validation failed in counterOffer', [
+                'offer_id' => $offerId,
+                'errors' => $e->errors(),
+                'input' => $request->all(),
+            ]);
+            return $this->errorResponse($e->errors(), 422);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            // Log when offer is not found
+            Log::error('Offer not found in counterOffer', [
+                'offer_id' => $offerId,
+                'user_id' => $user ? $user->id : null,
+            ]);
+            return $this->errorResponse('Offer not found', 404);
         } catch (\Throwable $e) {
+            // Log any other unexpected errors
+            Log::error('Error in counterOffer', [
+                'offer_id' => $offerId,
+                'user_id' => $user ? $user->id : null,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             return $this->errorResponse($e->getMessage(), 422);
         }
     }
