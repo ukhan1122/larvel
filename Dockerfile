@@ -1,5 +1,4 @@
-﻿FROM richarvey/nginx-php-fpm:2.1.2
-
+﻿FROM richarvey/nginx-php-fpm:3.1.6
 COPY . .
 
 RUN composer install --no-dev --optimize-autoloader
