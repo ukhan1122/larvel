@@ -2,6 +2,7 @@
 COPY . .
 
 RUN composer install --no-dev --optimize-autoloader
+RUN php artisan migrate --force || true
 RUN php artisan storage:link
 RUN php artisan config:clear
 RUN php artisan config:cache
