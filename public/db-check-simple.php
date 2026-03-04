@@ -10,6 +10,8 @@ echo "Autoload loaded...\n";
 $app = require_once __DIR__.'/../bootstrap/app.php';
 echo "App loaded...\n";
 
+use Illuminate\Support\Facades\DB;
+
 try {
     echo "Testing database...\n";
     $pdo = DB::connection()->getPdo();
@@ -17,6 +19,11 @@ try {
     
     $tables = DB::select('SHOW TABLES');
     echo "Tables found: " . count($tables) . "\n";
+    
+    foreach($tables as $table) {
+        $tableName = current($table);
+        echo "  - " . $tableName . "\n";
+    }
     
 } catch (\Exception $e) {
     echo "❌ Error: " . $e->getMessage() . "\n";
