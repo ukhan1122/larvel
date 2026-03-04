@@ -4,6 +4,15 @@ use App\Http\Controllers\Api\V1\Listing\CategoriesController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+
+// Simple test route - no includes, no complexity
+Route::get('/laravel-test', function() {
+    return response()->json([
+        'laravel_working' => true,
+        'database_products' => \DB::table('products')->count(),
+        'message' => 'Laravel API is working!'
+    ]);
+});
 /*
 |--------------------------------------------------------------------------
 | API Routes
