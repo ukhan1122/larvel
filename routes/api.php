@@ -29,7 +29,29 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+// SINGLE v1 prefix group
 Route::prefix('v1')->group(function () {
+    
+    // DEBUG: Check if files exist
+    $files = [
+        'routes/api-group/auth/auth.php',
+        'routes/api-group/listing/products.php',
+        'routes/api-group/user/users.php',
+    ];
+    
+    foreach($files as $file) {
+        if(file_exists(base_path($file))) {
+            error_log("✅ Found: " . $file);
+        } else {
+            error_log("❌ MISSING: " . $file);
+        }
+    }
+    
+    // TEST ROUTE INSIDE V1
+    Route::get('/debug-test', function() {
+        return response()->json(['message' => 'v1 is working!']);
+    });
+    
     // Use require_once to prevent multiple inclusions
     require_once base_path('routes/api-group/auth/auth.php');
     require_once base_path('routes/api-group/auth/social-auth.php');
