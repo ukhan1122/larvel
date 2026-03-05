@@ -32,4 +32,8 @@ ENV LOG_CHANNEL stderr
 # Allow composer to run as root
 ENV COMPOSER_ALLOW_SUPERUSER 1
 
+
+# Override nginx configuration to ensure correct document root
+COPY nginx-site.conf /etc/nginx/sites-available/default.conf
+RUN ln -sf /etc/nginx/sites-available/default.conf /etc/nginx/sites-enabled/default.conf
 CMD ["/start.sh"]
