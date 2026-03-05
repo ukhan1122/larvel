@@ -20,6 +20,28 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::prefix('v1')->group(function () {
+
+    // DEBUG: Direct database query for products
+    Route::get('/debug-products-direct', function() {
+        try {
+            $products = DB::table('products')
+                ->where('approval_status', 'approved')
+                ->whereNull('deleted_at')
+                ->select('id', 'title', 'price', 'approval_status')
+                ->get();
+            
+            return response()->json([
+                'success' => true,
+                'count' => $products->count(),
+                'products' => $products
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    });
     require base_path('routes/api-group/auth/auth.php');
     require base_path('routes/api-group/auth/social-auth.php');
     require base_path('routes/api-group/user/preferences.php');
