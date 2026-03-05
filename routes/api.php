@@ -76,4 +76,37 @@ Route::prefix('v1')->group(function () {
     require_once base_path('routes/api-group/user/bank.php');
     require_once base_path('routes/api-group/activity/activity.php');
     require_once base_path('routes/api-group/admin/admin-apis.php');
+// DEBUG ROUTE - Test ProductController directly
+Route::get('/test-product-controller', function() {
+    try {
+        $controllerClass = 'App\\Http\\Controllers\\Api\\V1\\Listing\\ProductController';
+        
+        $result = [
+            'controller_exists' => class_exists($controllerClass),
+            'method_exists' => false,
+            'error' => null
+        ];
+        
+        if ($result['controller_exists']) {
+            $result['method_exists'] = method_exists($controllerClass, 'publicProducts');
+        }
+        
+        if ($result['controller_exists'] && $result['method_exists']) {
+            $controller = app()->make($controllerClass);
+            $response = $controller->publicProducts();
+            
+            $result['response_status'] = $response->status();
+            $result['response_data'] = $response->getData();
+        }
+        
+        return response()->json($result);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine()
+        ], 500);
+    }
+});
 });
