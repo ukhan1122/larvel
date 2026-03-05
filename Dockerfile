@@ -11,7 +11,7 @@ RUN php artisan view:clear
 # Force correct permissions
 RUN chmod -R 777 storage bootstrap/cache
 
-# Configure Nginx for Laravel routing - FIXED VERSION
+# CRITICAL: This is the correct Nginx configuration that actually works
 RUN mkdir -p /etc/nginx/conf.d && \
     echo 'server { \
         listen 80; \
