@@ -8,16 +8,12 @@ RUN php artisan config:clear
 RUN php artisan config:cache
 RUN php artisan route:clear
 RUN php artisan view:clear
-
-# Nuclear option - clear absolutely everything
-RUN rm -f bootstrap/cache/*.php
-RUN php artisan config:clear
-RUN php artisan route:clear
-RUN php artisan cache:clear
-RUN php artisan view:clear
 RUN php artisan optimize:clear
 
-# Image config
+# Test PHP-FPM configuration
+RUN php-fpm -t
+
+# Image config - THESE ARE CRITICAL
 ENV SKIP_COMPOSER 1
 ENV WEBROOT /var/www/html/public
 ENV PHP_ERRORS_STDERR 1
@@ -32,8 +28,4 @@ ENV LOG_CHANNEL stderr
 # Allow composer to run as root
 ENV COMPOSER_ALLOW_SUPERUSER 1
 
-
-# Override nginx configuration to ensure correct document root
-COPY nginx-site.conf /etc/nginx/sites-available/default.conf
-RUN ln -sf /etc/nginx/sites-available/default.conf /etc/nginx/sites-enabled/default.conf
 CMD ["/start.sh"]
