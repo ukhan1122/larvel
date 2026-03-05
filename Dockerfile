@@ -17,9 +17,9 @@ RUN php artisan view:clear
 # Force correct permissions
 RUN chmod -R 777 storage bootstrap/cache
 
-# Setup Nginx for Laravel
-RUN rm -f /etc/nginx/conf.d/default.conf
-RUN printf "server {\n\
+# Create nginx conf.d directory and add configuration
+RUN mkdir -p /etc/nginx/conf.d && \
+    printf "server {\n\
     listen 80;\n\
     server_name _;\n\
     root /var/www/html/public;\n\
