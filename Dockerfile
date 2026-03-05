@@ -1,42 +1,45 @@
-﻿# Production Dockerfile - migrations removed
-FROM richarvey/nginx-php-fpm:3.1.6
+﻿FROM php:8.2-fpm
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    zip \
+    unzip \
+    nginx \
+    supervisor
+
+# Clear cache
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install PHP extensions
+RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+
+# Get latest Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Set working directory
+WORKDIR /var/www/html
+
+# Copy application files
 COPY . .
 
+# Install dependencies
 RUN composer install --no-dev --optimize-autoloader
-RUN php artisan storage:link
-RUN php artisan config:clear
-RUN php artisan config:cache
-RUN php artisan route:clear
-RUN php artisan view:clear
 
-# Force correct permissions
-RUN chmod -R 777 storage bootstrap/cache
+# Set permissions
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Create nginx conf.d directory if it doesn't exist and add config
-RUN mkdir -p /etc/nginx/conf.d && \
-    echo 'server { \
-    listen 80; \
-    root /var/www/html/public; \
-    index index.php index.html; \
-    \
-    location / { \
-        try_files $uri $uri/ /index.php?$query_string; \
-    } \
-    \
-    location ~ \.php$ { \
-        fastcgi_pass 127.0.0.1:9000; \
-        fastcgi_index index.php; \
-        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name; \
-        include fastcgi_params; \
-    } \
-}' > /etc/nginx/conf.d/default.conf
+# Configure nginx
+COPY nginx.conf /etc/nginx/nginx.conf
 
-# Image config
-ENV SKIP_COMPOSER 1
-ENV WEBROOT /var/www/html/public
-ENV PHP_ERRORS_STDERR 1
-ENV RUN_SCRIPTS 1
-ENV REAL_IP_HEADER 1
-ENV COMPOSER_ALLOW_SUPERUSER 1
+# Configure supervisor
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-CMD ["/start.sh"]
+EXPOSE 80
+
+CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
